@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Properties
 
 plugins {
     kotlin("jvm") version "1.6.10"
@@ -7,6 +8,10 @@ plugins {
 
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
@@ -25,16 +30,19 @@ application {
     mainClass.set("kotlinx.coroutines.profiler.app.MainKt")
 }
 
-val coroutinesCoreAgentPath = "C:\\Users\\Dmitriy\\.gradle\\caches\\modules-2\\files-2.1\\org.jetbrains.kotlinx\\kotlinx-coroutines-core-jvm\\1.6.0\\f3b8fd26c2e76d2f18cbc36aacb6e349fcb9fd5f\\kotlinx-coroutines-core-jvm-1.6.0.jar"
-val coroutinesDebugAgentPath = "C:\\Users\\Dmitriy\\.gradle\\caches\\modules-2\\files-2.1\\org.jetbrains.kotlinx\\kotlinx-coroutines-debug\\1.6.0\\aff74c5052196341f29080c718bff2375bdf5669\\kotlinx-coroutines-debug-1.6.0.jar"
+val props = Properties()
+file("settings.properties").inputStream().let { props.load(it) }
+
 
 tasks.create<JavaExec>("runWithProfiler") {
     classpath(sourceSets["main"].runtimeClasspath)
     mainClass.set("kotlinx.coroutines.profiler.app.MainKt")
 
     jvmArgs(
-        "-javaagent:$coroutinesCoreAgentPath",
-        "-javaagent:$coroutinesDebugAgentPath",
-        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}\\out\\artifacts\\profiler\\sampling.jar"
+        "-javaagent:${props["COROUTINES_CORE_AGENT_PATH"]}",
+        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
+        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
     )
 }
+
+tasks["runWithProfiler"].dependsOn(":sampling:fatJar")

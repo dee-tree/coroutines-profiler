@@ -1,14 +1,12 @@
 package kotlinx.coroutines.profiler.sampling
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.repackaged.net.bytebuddy.ByteBuddy
 import kotlinx.coroutines.repackaged.net.bytebuddy.agent.ByteBuddyAgent
 import kotlinx.coroutines.repackaged.net.bytebuddy.dynamic.loading.ClassReloadingStrategy
 import java.lang.instrument.Instrumentation
 
 object Agent {
-
 
     @ExperimentalCoroutinesApi
     @JvmStatic
@@ -17,7 +15,7 @@ object Agent {
         println("agent: thread: ${mainThread}")
         println("agent: PID: " + ProcessHandle.current().pid())
 
-        Profiler.attachAndRun()
+        Profiler.attachAndRun(5)
 
     }
 
@@ -31,10 +29,6 @@ object Agent {
             .name(cl.name)
             .make()
             .load(cl.classLoader, ClassReloadingStrategy.fromInstalledAgent())
-    }
-
-    fun Job.foldAll(): String {
-        return children.fold(this.toString()) { acc, job -> "$acc, ${job.foldAll()}" }
     }
 
 }

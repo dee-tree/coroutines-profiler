@@ -1,7 +1,6 @@
 package kotlinx.coroutines.profiler.app.matrix
 
 import kotlinx.coroutines.*
-import kotlin.coroutines.coroutineContext
 import kotlin.random.Random
 
 class Matrix(val rows: Int, val columns: Int, private vararg val numbers: Double) {
@@ -43,7 +42,6 @@ class Matrix(val rows: Int, val columns: Int, private vararg val numbers: Double
 
         val result: Matrix
 
-        coroutineContext
         withContext(Dispatchers.Default) {
             val rows = (0 until rows).map { row ->
                 async {

@@ -1,6 +1,5 @@
 package kotlinx.coroutines.profiler.app
 
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.profiler.app.matrix.Matrix
 import kotlinx.coroutines.runBlocking
 
@@ -11,13 +10,11 @@ fun main() {
         calculateMatrix()
     }
 
-    println("finish: ${System.currentTimeMillis() - begin} ms")
+    println("program execution time: ${System.currentTimeMillis() - begin} ms")
 }
 
 
 suspend fun calculateMatrix() {
-    delay(200)
-
-    // 1 coroutine
-    Matrix.random(1, 10_000) timesConcurrent  Matrix.random(10_000, 1_000)
+    // coroutines count: rows in the first matrix
+    Matrix.random(5, 10_000) timesConcurrent  Matrix.random(10_000, 1_000)
 }

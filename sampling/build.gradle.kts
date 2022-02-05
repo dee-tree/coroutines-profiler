@@ -4,13 +4,20 @@ plugins {
     kotlin("jvm") version "1.6.10"
 }
 
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0")
 
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
+
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     testImplementation(kotlin("test"))
 }
 
