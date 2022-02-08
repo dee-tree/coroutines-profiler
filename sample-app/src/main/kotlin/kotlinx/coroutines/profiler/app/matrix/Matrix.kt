@@ -45,6 +45,7 @@ class Matrix(val rows: Int, val columns: Int, private vararg val numbers: Double
         withContext(Dispatchers.Default) {
             val rows = (0 until rows).map { row ->
                 async {
+//                    delay(100)
                     timesConcurrent(row, b)
                 }
             }.awaitAll()

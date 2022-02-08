@@ -20,6 +20,14 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+
+    jvmArgs(
+        "-Xms256m",
+        "-Xmx1g",
+        "-javaagent:${props["COROUTINES_CORE_AGENT_PATH"]}",
+        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
+        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar",
+    )
 }
 
 tasks.withType<KotlinCompile> {
@@ -39,10 +47,11 @@ tasks.create<JavaExec>("runWithProfiler") {
     mainClass.set("kotlinx.coroutines.profiler.app.MainKt")
 
     jvmArgs(
-        "-javaagent:${props["COROUTINES_CORE_AGENT_PATH"]}",
+//        "-javaagent:${props["COROUTINES_CORE_AGENT_PATH"]}",
         "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
-        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
+//        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
     )
 }
 
 tasks["runWithProfiler"].dependsOn(":sampling:fatJar")
+tasks["test"].dependsOn(":sampling:fatJar")

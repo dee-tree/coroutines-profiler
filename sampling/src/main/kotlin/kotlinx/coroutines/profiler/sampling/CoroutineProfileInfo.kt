@@ -8,46 +8,41 @@ import kotlinx.coroutines.profiler.sampling.postprocessing.CoroutineSamplesVisua
 @ExperimentalCoroutinesApi
 class CoroutinesProfileInfoOwner {
 
+    private val infoByJob = mutableMapOf<Job, CoroutineProfileInfo>()
+
     private val coroutinesInfo = mutableListOf<CoroutineProfileInfo>()
 
     fun sample(dump: List<CoroutineInfo>) {
         dump.forEach { dumpInfo ->
-            val foundInfo = findCoroutineInfoById(dumpInfo.id)
+
+            val foundInfo = infoByJob[dumpInfo.job]
 
             if (foundInfo == null) {
-
                 val coroutineProfileInfo = CoroutineProfileInfo(dumpInfo)
-
                 val parentCoroutineInfo = coroutineProfileInfo.findParent()
 
                 if (parentCoroutineInfo != null) {
-                    println("Found new child! id: ${coroutineProfileInfo.id}, job: ${coroutineProfileInfo.lastSampledJob}")
                     parentCoroutineInfo.addChild(coroutineProfileInfo)
                 } else {
-                    println("Found new coroutine! id: ${coroutineProfileInfo.id}, job: ${coroutineProfileInfo.lastSampledJob}")
                     coroutinesInfo.add(coroutineProfileInfo)
+                }
+
+                coroutineProfileInfo.lastSampledJob?.let {
+                    infoByJob[it] = coroutineProfileInfo
                 }
 
             } else {
                 foundInfo.updateSample(dumpInfo)
             }
-        }
-    }
 
-    private fun findCoroutineInfoById(id: Long): CoroutineProfileInfo? {
-        coroutinesInfo.forEach { info ->
-            info.thisOrChildWithId(id)?.let { return it }
         }
-        return null
     }
 
     private fun CoroutineProfileInfo.findParent(): CoroutineProfileInfo? {
-        coroutinesInfo.forEach {
-            it.findFromDeepest { parentCoroutineInfo ->
-                parentCoroutineInfo.lastSampledJob?.findConsideringChildren { parentJob ->
-                    parentJob == this.lastSampledJob
-                } != null
-            }?.let { found -> return found }
+        coroutinesInfo.forEach { parent ->
+            parent.lastSampledJob?.findConsideringChildren { parentJob ->
+                parentJob == this.lastSampledJob
+            }?.let { found -> return parent }
         }
         return null
     }
@@ -81,35 +76,12 @@ class CoroutineProfileInfo(delegate: CoroutineInfo) {
         _children.add(child)
     }
 
-    fun thisOrChildWithId(id: Long): CoroutineProfileInfo? {
-        if (this.id == id) {
-            return this
-        } else {
-            _children.forEach {
-                it.thisOrChildWithId(id)?.let { found -> return found }
-            }
-        }
-
-        return null
-    }
-
 
     fun updateSample(dump: CoroutineInfo) {
         require(dump.id == id) { "different coroutines!" }
 
         lastSampledJob = dump.job
         _samples.add(CoroutineSample(dump))
-    }
-
-
-    fun findFromDeepest(condition: (CoroutineProfileInfo) -> Boolean): CoroutineProfileInfo? {
-        children.forEach {
-            it.findFromDeepest(condition)?.let { found -> return found }
-        }
-
-        if (condition(this)) return this
-
-        return null
     }
 
 

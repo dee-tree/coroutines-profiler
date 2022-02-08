@@ -5,16 +5,25 @@ import kotlinx.coroutines.runBlocking
 
 
 fun main() {
-    val begin = System.currentTimeMillis()
-    runBlocking {
-        calculateMatrix()
+    var summaryTime = 0L
+    val iters = 10
+
+    for (i in 1..iters) {
+        val begin = System.nanoTime()
+
+        runBlocking {
+            calculateMatrix()
+        }
+        val iterTime = System.nanoTime() - begin
+        summaryTime += iterTime / 1_000_000 // (ms)
     }
 
-    println("program execution time: ${System.currentTimeMillis() - begin} ms")
+    println("Mean execution of cycle: ${summaryTime / iters}")
+    println("program execution time: ${summaryTime} ms")
 }
 
 
 suspend fun calculateMatrix() {
     // coroutines count: rows in the first matrix
-    Matrix.random(5, 10_000) timesConcurrent  Matrix.random(10_000, 1_000)
+    Matrix.random(100, 1_000_000) timesConcurrent  Matrix.random(1_000_000, 10)
 }

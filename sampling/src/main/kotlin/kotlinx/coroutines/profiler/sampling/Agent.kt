@@ -11,12 +11,13 @@ object Agent {
     @ExperimentalCoroutinesApi
     @JvmStatic
     fun premain(args: String?, instrumentation: Instrumentation) {
+        val begin = System.currentTimeMillis()
         val mainThread = Thread.currentThread()
         println("agent: thread: ${mainThread}")
         println("agent: PID: " + ProcessHandle.current().pid())
 
         Profiler.attachAndRun(5)
-
+        println("Agent worked ${System.currentTimeMillis() - begin} ms")
     }
 
     private fun redefine() {
