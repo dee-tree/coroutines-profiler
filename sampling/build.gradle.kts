@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10"
 }
 
 repositories {
@@ -13,10 +14,7 @@ group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
-
-//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
-
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     testImplementation(kotlin("test"))
 }
@@ -39,11 +37,12 @@ tasks.create<Jar>("fatJar") {
     }
 
     destinationDirectory.set(File(projectDir, "out/artifacts/profiler"))
-    archiveVersion.set("")
-    archiveBaseName.set(project.name)
 
-    from(sourceSets["main"].output.classesDirs, sourceSets["main"].compileClasspath)
+    from(configurations.compileClasspath.get().map { if (it.isDirectory)  it else zipTree(it) })
+//    from(sourceSets["main"].output.classesDirs, sourceSets["main"].compileClasspath)
     with(tasks.jar.get() as CopySpec)
+
+    archiveFileName.set("${project.name}.jar")
 }
 
 tasks["fatJar"].dependsOn("build")

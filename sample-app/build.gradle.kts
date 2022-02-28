@@ -14,7 +14,8 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+
     testImplementation(kotlin("test"))
 }
 
@@ -24,7 +25,6 @@ tasks.test {
     jvmArgs(
         "-Xms256m",
         "-Xmx1g",
-        "-javaagent:${props["COROUTINES_CORE_AGENT_PATH"]}",
         "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
         "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar",
     )
@@ -47,9 +47,8 @@ tasks.create<JavaExec>("runWithProfiler") {
     mainClass.set("kotlinx.coroutines.profiler.app.MainKt")
 
     jvmArgs(
-//        "-javaagent:${props["COROUTINES_CORE_AGENT_PATH"]}",
         "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
-//        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
+        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
     )
 }
 

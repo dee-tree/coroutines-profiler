@@ -2,20 +2,21 @@ package kotlinx.coroutines.profiler.app
 
 import kotlinx.coroutines.profiler.app.matrix.Matrix
 import kotlinx.coroutines.runBlocking
-
+import kotlin.system.measureTimeMillis
 
 fun main() {
     var summaryTime = 0L
-    val iters = 10
+    val iters = 1
 
     for (i in 1..iters) {
-        val begin = System.nanoTime()
+        val iterTime = measureTimeMillis {
 
-        runBlocking {
-            calculateMatrix()
+            runBlocking {
+                calculateMatrix()
+            }
+
         }
-        val iterTime = System.nanoTime() - begin
-        summaryTime += iterTime / 1_000_000 // (ms)
+        summaryTime += iterTime // (ms)
     }
 
     println("Mean execution of cycle: ${summaryTime / iters}")
@@ -25,5 +26,5 @@ fun main() {
 
 suspend fun calculateMatrix() {
     // coroutines count: rows in the first matrix
-    Matrix.random(100, 1_000_000) timesConcurrent  Matrix.random(1_000_000, 10)
+    Matrix.random(10, 1_000_000) timesConcurrent Matrix.random(1_000_000, 10)
 }
