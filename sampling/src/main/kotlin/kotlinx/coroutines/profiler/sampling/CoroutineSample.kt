@@ -4,6 +4,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.debug.CoroutineInfo
 import kotlinx.coroutines.debug.State
 
+@Deprecated("")
 @ExperimentalCoroutinesApi
 class CoroutineSample(info: CoroutineInfo) {
 

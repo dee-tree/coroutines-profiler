@@ -4,6 +4,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.debug.State
 import kotlinx.coroutines.profiler.sampling.ProfileCoroutineInfo
 
+@Deprecated("")
 @ExperimentalCoroutinesApi
 internal class CoroutineSamplesVisualizer(coroutineProfileInfo: ProfileCoroutineInfo) {
 

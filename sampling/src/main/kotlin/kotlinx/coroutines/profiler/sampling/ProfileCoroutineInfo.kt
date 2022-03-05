@@ -7,6 +7,7 @@ import kotlinx.coroutines.profiler.sampling.postprocessing.CoroutineSamplesVisua
 import kotlin.system.measureTimeMillis
 
 
+@Deprecated("")
 @ExperimentalCoroutinesApi
 class ProfileCoroutineInfo(private val coroutineInfo: CoroutineInfo) {
 

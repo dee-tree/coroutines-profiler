@@ -3,35 +3,28 @@ package kotlinx.coroutines.profiler.sampling
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.debug.CoroutineInfo
 import kotlinx.coroutines.debug.DebugProbes
-import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
 import kotlin.concurrent.thread
 import kotlin.system.measureTimeMillis
 
 @ExperimentalCoroutinesApi
-object CoroutinesProfiler {
-
-    private val coroutinesInfo = ProfileCoroutineInfo.CoroutinesProfileInfoOwner()
+internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
 
     fun attachAndRun(timeInterval: Long = 5) {
         val attachedThread = Thread.currentThread()
-
         thread {
             DebugProbes.install()
-//            DebugProbes.enableCreationStackTraces = false
-            DebugProbes.delayedCreationStackTraces = true
+//            DebugProbes.delayedCreationStackTraces = true
+            DebugProbes.sanitizeStackTraces = false
             println("creation stack traces: ${DebugProbes.enableCreationStackTraces}")
             println("delayed creation stack traces: ${DebugProbes.delayedCreationStackTraces}")
 
             var totalSampledTime = 0L
             var totalSamples = 0
 
-            var dumpNumber = 0
+            var dumpId = 0L
             while (attachedThread.isAlive) {
                 val sampleTime = measureTimeMillis {
-                    sample()
+                    sample(dumpId)
                 }.also {
                     totalSampledTime += it
                     totalSamples++
@@ -40,12 +33,14 @@ object CoroutinesProfiler {
                 val needSleep = timeInterval - sampleTime
                 if (needSleep > 0)
                     Thread.sleep(timeInterval) else {
-                    System.err.println("Oops... Too long sample! $sampleTime ms for Dump #${dumpNumber++} ")
+                    System.err.println("Oops... Too long sample! $sampleTime ms for Dump #${dumpId} ")
                 }
+                dumpId++
             }
 
+            dumpWriter.stop()
+
             DebugProbes.uninstall()
-            coroutinesInfo.printReport()
 
             println("-".repeat(10))
             println("Total samples count: $totalSamples")
@@ -57,7 +52,7 @@ object CoroutinesProfiler {
 
     private var totalDebugProbesDumpTime = 0L
 
-    private fun sample() {
+    private fun sample(dumpId: Long) {
         val dump: List<CoroutineInfo>
         measureTimeMillis {
             dump = DebugProbes.dumpCoroutinesInfo()
@@ -66,8 +61,11 @@ object CoroutinesProfiler {
             totalDebugProbesDumpTime += it
         }
 
-        coroutinesInfo.sample(dump)
+        val samples = transform(dump, dumpId) {
+            dumpWriter.dumpNewCoroutine(it)
+        }
+
+        dumpWriter.dumpSamples(samples)
     }
 
-    private fun nowFormatted() = DateTimeFormatter.ofPattern("yyyy_MM_dd-hh_mm_ss").format(LocalDateTime.now())
 }

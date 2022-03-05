@@ -6,7 +6,10 @@ plugins {
 }
 
 repositories {
-    mavenLocal()
+    flatDir {
+        dirs(File(rootDir, "libs").absolutePath)
+    }
+
     mavenCentral()
 }
 
@@ -15,7 +18,8 @@ version = "1.0-SNAPSHOT"
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0-SNAPSHOT")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
     testImplementation(kotlin("test"))
 }
 
@@ -27,6 +31,12 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+tasks.clean {
+    doFirst {
+        delete("out")
+    }
+}
+
 tasks.create<Jar>("fatJar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -34,15 +44,13 @@ tasks.create<Jar>("fatJar") {
         attributes["Manifest-Version"] = "1.0"
         attributes["Premain-Class"] = "kotlinx.coroutines.profiler.sampling.Agent"
         attributes["Can-Redefine-Classes"] = "true"
+        attributes["Can-Retransform-Classes"] = "true"
     }
 
     destinationDirectory.set(File(projectDir, "out/artifacts/profiler"))
 
-    from(configurations.compileClasspath.get().map { if (it.isDirectory)  it else zipTree(it) })
-//    from(sourceSets["main"].output.classesDirs, sourceSets["main"].compileClasspath)
+    from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     with(tasks.jar.get() as CopySpec)
 
     archiveFileName.set("${project.name}.jar")
 }
-
-tasks["fatJar"].dependsOn("build")
