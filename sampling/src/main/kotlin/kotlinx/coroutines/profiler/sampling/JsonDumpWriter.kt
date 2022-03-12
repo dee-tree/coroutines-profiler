@@ -32,8 +32,8 @@ internal class JsonDumpWriter(
 
     override fun stop() {
         println("Dump folder: ${dumpFolder}")
-        coroutinesListFile.writeText(Json.encodeToString(coroutines))
-        samplesFile.writeText(Json.encodeToString(samples))
+        coroutinesListFile.writeText(Json.encodeToString(coroutines.toList()))
+        samplesFile.writeText(Json.encodeToString(samples.toList()))
     }
 
     private fun nowFormatted() = DateTimeFormatter.ofPattern("yyyy_MM_dd-hh_mm_ss").format(LocalDateTime.now())

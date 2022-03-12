@@ -32,4 +32,45 @@ fun main(args: Array<String>) {
         showCoroutineStatesRanges(it)
     }
 
+
+    rootCoroutines.toFlameJson(File("/Users/Dmitry.Sokolov/ideaProjects/coroutines-profiler/flame/input/coro-stacks.json").outputStream())
+
 }
+
+
+
+/* normal json sample:
+
+{
+  "name": "coroutine #1",
+  "value": 1000,
+  "children": [
+    {
+      "name": "RUNNING",
+      "value": 100
+    },
+    {
+      "name": "SUSPENDED",
+      "value": 400,
+      "children": [
+        {
+          "name": "coroutine #2",
+          "value": 200,
+          "children": [
+            {
+              "name": "RUNNING",
+              "value": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RUNNING",
+      "value": 500,
+      "children": []
+    }
+  ]
+}
+
+ */

@@ -12,6 +12,12 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
     fun attachAndRun(timeInterval: Long = 5) {
         val attachedThread = Thread.currentThread()
         thread {
+            Runtime.getRuntime().addShutdownHook(thread(false) {
+            System.err.println("Interrupting profiler...")
+            println("Interrupting profiler...")
+            dumpWriter.stop()
+        })
+
             DebugProbes.install()
 //            DebugProbes.delayedCreationStackTraces = true
             DebugProbes.sanitizeStackTraces = false
@@ -38,7 +44,7 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
                 dumpId++
             }
 
-            dumpWriter.stop()
+//            dumpWriter.stop()
 
             DebugProbes.uninstall()
 
@@ -63,8 +69,10 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
 
         val samples = transform(dump, dumpId) {
             dumpWriter.dumpNewCoroutine(it)
+            println("Found new coroutine: ${it}")
         }
 
+        println("Dump. Samples: ${samples.size}")
         dumpWriter.dumpSamples(samples)
     }
 

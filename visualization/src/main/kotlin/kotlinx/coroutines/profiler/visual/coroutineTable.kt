@@ -25,6 +25,7 @@ internal fun showCoroutineTable(coroutine: ProfilingCoroutineInfo) {
 internal fun showCoroutineStatesRanges(coroutine: ProfilingCoroutineInfo) {
     table {
         cellStyle {
+            this.padding = 0
             border = true
             this.alignment = TextAlignment.MiddleCenter
         }

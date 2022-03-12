@@ -1,0 +1,209 @@
+<head>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.jsdelivr.net/npm/d3-flame-graph@4.1.3/dist/d3-flamegraph.css"/>
+
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+
+</head>
+<body>
+
+<div class="container">
+    <div class="header clearfix">
+        <nav>
+            <div class="pull-right">
+                <form class="form-inline" id="form">
+                    <a class="btn" href="javascript: resetZoom();">Reset zoom</a>
+                    <a class="btn" href="javascript: clear();">Clear</a>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="term"/>
+                    </div>
+                    <a class="btn btn-primary" href="javascript: search();">Search</a>
+                </form>
+            </div>
+        </nav>
+        <h3 class="text-muted">Coroutines Profiler results</h3>
+    </div>
+</div>
+<div id="chart" style="display: flex; justify-content: center; margin-bottom: 5%"></div>
+
+<div id="stacktrace" style="display: flex; justify-content: center"></div>
+
+<script type="text/javascript" src="https://d3js.org/d3.v7.js"></script>
+<script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/d3-flame-graph@4.1.3/dist/d3-flamegraph.min.js"></script>
+<script type="text/javascript">
+
+    const search = () => {
+        var term = document.getElementById("term").value;
+        flameGraph.search(term);
+    };
+
+    const clear = () => {
+        document.getElementById("term").value = "";
+        flameGraph.clear();
+    };
+    const resetZoom = () => {
+        flameGraph.resetZoom();
+    };
+
+
+    function stacksFromList(list, value) {
+        currentIdx = list.length - 1
+        current = {
+            name: list[currentIdx],
+            value: value,
+        }
+
+        while (currentIdx > 0) {
+            current = {
+                name: list[--currentIdx],
+                value: value,
+                children: [current]
+            }
+        }
+
+
+        return current
+    }
+
+    const onClick = d => {
+        console.info("Clicked on " + d.data.name);
+        var divParent = document.getElementById("stacktrace");
+        var child = divParent.lastElementChild
+        while (child) {
+            divParent.removeChild(child)
+            child = divParent.lastElementChild
+        }
+
+        var x = flamegraph()
+            .title("Stacktrace for " + d.data.name + " at " + d.data.state)
+
+
+        d3.select("#stacktrace").datum(stacksFromList((d.data.stacktrace.split(", ").concat("Coroutine creation stacktrace").concat(d.data.creationStackTrace.split(", ")).reverse()), d.data.samples)).call(x);
+
+    };
+
+    document.getElementById("form").addEventListener("submit", event => {
+        event.preventDefault();
+        search();
+    });
+
+    const flameGraph = flamegraph()
+        .width(1300)
+        .title("Coroutines dump")
+        .tooltip(true)
+        .onClick(onClick)
+    ;
+
+    const details = document.getElementById("details");
+    flameGraph.setDetailsElement(details);
+
+
+    var label = function (d) {
+        return "name: " + d.data.name + "\n" +
+            "value: " + d.value + "\n" +
+            "samples: " + d.data.samples + "\n" +
+            "state: " + d.data.state + "\n" +
+            (d.data.state === "RUNNING" ? "thread: " + d.data.thread : "") + "\n" +
+            ((d.data.state === "RUNNING" || d.data.state === "SUSPENDED") ? "trace: " + d.data.stacktrace?.replaceAll(", ", "\n\n") : "")
+
+    }
+    flameGraph.label(label);
+
+    flameGraph.setColorMapper(function (d, originalColor) {
+        if (d.highlight) return "#FFFFFF"
+        // return originalColor ;//"#E600E6";
+
+        if (d.data.state === "CREATED")
+            return "#FFB266"
+        if (d.data.state === "RUNNING")
+            return "#70ff66"
+        if (d.data.state === "SUSPENDED")
+            return "#FF6666"
+
+
+        // if (d.data.state === "CREATED")
+        //     return mix_hexes("#FFFF66", rgbStringToHex(originalColor))
+        // if (d.data.state === "RUNNING")
+        //     return mix_hexes("#66FFB2", rgbStringToHex(originalColor))
+        // if (d.data.state === "SUSPENDED")
+        //     return mix_hexes("#FF6666", rgbStringToHex(originalColor))
+
+        return originalColor
+    });
+
+
+    function hex2dec(hex) {
+        return hex.replace('#', '').match(/.{2}/g).map(n => parseInt(n, 16));
+    }
+
+    function rgbStringToHex(color) {
+        splitcolors = color.replace("rgb", '').replace('(', '').replace(')', '').split(",")
+        r = parseInt(splitcolors[0])
+        g = parseInt(splitcolors[1])
+        b = parseInt(splitcolors[2])
+
+        return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+    }
+
+    function rgb2hex(r, g, b) {
+        r = Math.round(r);
+        g = Math.round(g);
+        b = Math.round(b);
+        r = Math.min(r, 255);
+        g = Math.min(g, 255);
+        b = Math.min(b, 255);
+        return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+    }
+
+    function rgb2cmyk(r, g, b) {
+        let c = 1 - (r / 255);
+        let m = 1 - (g / 255);
+        let y = 1 - (b / 255);
+        let k = Math.min(c, m, y);
+        c = (c - k) / (1 - k);
+        m = (m - k) / (1 - k);
+        y = (y - k) / (1 - k);
+        return [c, m, y, k];
+    }
+
+    function cmyk2rgb(c, m, y, k) {
+        let r = c * (1 - k) + k;
+        let g = m * (1 - k) + k;
+        let b = y * (1 - k) + k;
+        r = (1 - r) * 255 + .5;
+        g = (1 - g) * 255 + .5;
+        b = (1 - b) * 255 + .5;
+        return [r, g, b];
+    }
+
+
+    function mix_cmyks(...cmyks) {
+        let c = cmyks.map(cmyk => cmyk[0]).reduce((a, b) => a + b, 0) / cmyks.length;
+        let m = cmyks.map(cmyk => cmyk[1]).reduce((a, b) => a + b, 0) / cmyks.length;
+        let y = cmyks.map(cmyk => cmyk[2]).reduce((a, b) => a + b, 0) / cmyks.length;
+        let k = cmyks.map(cmyk => cmyk[3]).reduce((a, b) => a + b, 0) / cmyks.length;
+        return [c, m, y, k];
+    }
+
+    function mix_hexes(...hexes) {
+        let rgbs = hexes.map(hex => hex2dec(hex));
+        let cmyks = rgbs.map(rgb => rgb2cmyk(...rgb));
+        let mixture_cmyk = mix_cmyks(...cmyks);
+        let mixture_rgb = cmyk2rgb(...mixture_cmyk);
+        let mixture_hex = rgb2hex(...mixture_rgb);
+        return mixture_hex;
+    }
+
+
+    d3.json("input/coro-stacks.json")
+        .then(data => {
+            d3.select("#chart")
+                .datum(data)
+                .call(flameGraph);
+        }).catch(error => {
+        return console.warn(error);
+    });
+</script>
+</body>
