@@ -1,6 +1,5 @@
 package kotlinx.coroutines.profiler.visual
 
-import kotlinx.coroutines.debug.State
 import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.visual.CoroutineStatesRange.Companion.splitByStates
 import kotlinx.serialization.json.*
@@ -45,11 +44,12 @@ private fun ProfilingCoroutineInfo.toFlameJson(
         val width = (samplesForThisParentState * parentCoeff).toLong()
         if (width > 0) {
             array.addJsonObject {
-                put("name", "$kind #$id")
+                put("name", "#$id $kind")
+                put("id", id)
+                put("kind", kind)
                 put("state", state.state.toString())
                 put("samples", samplesForThisParentState)
                 put("stacktrace", state.lastStackTrace.joinToString(", "))
-                put("creationStackTrace", this@toFlameJson.creationStackTrace.joinToString(", "))
                 put("thread", state.thread)
                 put("value", width)
                 putJsonArray("children") {
