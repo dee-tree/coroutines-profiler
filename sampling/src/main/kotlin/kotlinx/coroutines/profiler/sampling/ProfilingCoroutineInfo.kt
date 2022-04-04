@@ -8,7 +8,8 @@ import kotlinx.serialization.Transient
 data class ProfilingCoroutineInfo internal constructor(
     val id: Long,
     val parentId: Long?,
-    val creationStackTrace: List<String>
+    val creationStackTrace: List<String>,
+    val name: String? = "unknown"
 ) {
 
     @Transient

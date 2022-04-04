@@ -9,7 +9,7 @@ import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.visual.CoroutineStatesRange.Companion.splitByStates
 
 internal fun showCoroutineTable(coroutine: ProfilingCoroutineInfo) {
-    println("Coroutine #${coroutine.id}: ${coroutine.kind}")
+    println("Coroutine ${coroutine.name}: #${coroutine.id}")
 
     showCoroutineSamplesGrouping(coroutine)
     showCoroutineThreadsGrouping(coroutine)

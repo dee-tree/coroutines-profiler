@@ -33,13 +33,16 @@ application {
 }
 
 tasks.create<JavaExec>("runWithLastDump") {
-//    dependsOn(":sample-app:runWithProfiler")
-
     args(
-        "/Users/Dmitry.Sokolov/ideaProjects/coroutines-profiler/sampling/out/dumps/notSpecified/coro-profiling-all.json",
-        "/Users/Dmitry.Sokolov/ideaProjects/coroutines-profiler/sampling/out/dumps/notSpecified/coro-profiling-samples.json"
+        "W:\\Kotlin\\Projects\\coroutines-profiler\\sampling\\out\\dumps\\notSpecified\\coro-profiling-all.json",
+        "W:\\Kotlin\\Projects\\coroutines-profiler\\sampling\\out\\dumps\\notSpecified\\coro-profiling-samples.json"
     )
 
     classpath(sourceSets["main"].runtimeClasspath)
     mainClass.set(mainClassQualifiedName)
+}
+
+tasks.create("runAllCycle") {
+        dependsOn(":sample-app:runWithProfiler")
+        dependsOn(":visualization:runWithLastDump")
 }

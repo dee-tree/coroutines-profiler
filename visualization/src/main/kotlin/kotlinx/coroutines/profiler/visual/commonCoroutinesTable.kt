@@ -30,7 +30,7 @@ fun showCommonCoroutinesTable(coroutines: List<ProfilingCoroutineInfo>) {
                     row(
                         it.id,
                         it.parentId ?: "-",
-                        it.kind ?: "unknown",
+//                        it.kind ?: "unknown",
                         it.totalExistenceSamples(),
                         it.totalCreatedSamples(),
                         it.totalRunningSamples(),

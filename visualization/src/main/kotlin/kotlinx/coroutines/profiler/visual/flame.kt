@@ -10,15 +10,15 @@ import java.io.OutputStream
 fun List<ProfilingCoroutineInfo>.toFlameJson(out: OutputStream) {
     val json = buildJsonObject {
         put("name", "root")
-        val samplesTotally = fold(0L) { acc, current -> acc + current.samples.size }
+        val samplesTotally = maxOf { it.samples.last().dumpId }
         put("value", samplesTotally)
 
         putJsonArray("children") {
             this@toFlameJson.forEach { rootCoroutine ->
                 rootCoroutine.toFlameJson(
                     this,
-                    1.0,
-                    rootCoroutine.samples.first().dumpId..rootCoroutine.samples.last().dumpId
+                    1.0 / size,
+                    0..samplesTotally
                 )
             }
         }
@@ -44,9 +44,8 @@ private fun ProfilingCoroutineInfo.toFlameJson(
         val width = (samplesForThisParentState * parentCoeff).toLong()
         if (width > 0) {
             array.addJsonObject {
-                put("name", "#$id $kind")
+                put("name", "$name $id")
                 put("id", id)
-                put("kind", kind)
                 put("state", state.state.toString())
                 put("samples", samplesForThisParentState)
                 put("stacktrace", state.lastStackTrace.joinToString(", "))

@@ -25,21 +25,6 @@ internal fun ProfilingCoroutineInfo.threads(): Map<String, Int> {
     return samples.groupingBy { it.currentThreadName }.eachCount().filterKeys { it != null } as Map<String, Int>
 }
 
-internal val ProfilingCoroutineInfo.kind: String?
-    get() {
-        val lineFromBuild =
-            this.creationStackTrace.firstOrNull {
-                it.contains("kotlinx.coroutines.BuildersKt") ||
-                        it.contains("kotlinx.coroutines.channels.ActorKt")
-            } ?: return null
-        return when {
-            lineFromBuild.contains("runBlocking", true) -> "blocking"
-            lineFromBuild.contains("async", true) -> "async"
-            lineFromBuild.contains("launch", true) -> "launch"
-            lineFromBuild.contains("actor", true) -> "actor"
-            else -> null
-        }
-    }
 
 class CoroutineStatesRange private constructor(
     val state: State,
@@ -62,36 +47,11 @@ class CoroutineStatesRange private constructor(
 
             samples.forEach {
                 val last = split.lastOrNull()
-                if (it.state == last?.state && it.currentThreadName == last.thread) {
+                if (it.state == last?.state && it.currentThreadName == last.thread && it.currentStackTrace == last.lastStackTrace) {
                     split[split.lastIndex]._toSample = it.dumpId
                 } else {
                     split.add(CoroutineStatesRange(it.state, it.currentThreadName, it.currentStackTrace, it.dumpId, it.dumpId))
                 }
-            }
-
-            return split
-        }
-    }
-
-}
-
-class CoroutineStatesInfo private constructor(
-    val state: State,
-) {
-    private val _dumpsIds = mutableListOf<Long>()
-    val dumpsIds: List<Long> get() = _dumpsIds
-
-    private fun addDump(id: Long) {
-        _dumpsIds.add(id)
-    }
-
-    companion object {
-        internal fun ProfilingCoroutineInfo.splitByStates(fromDump: Long = 0, toDump: Long = Long.MAX_VALUE): Map<State, CoroutineStatesInfo> {
-            val split = mutableMapOf<State, CoroutineStatesInfo>()
-
-            samples.filter { it.dumpId in fromDump..toDump }.groupBy { it.state }.entries.associate { it.key to it.value.size }
-            samples.forEach { sample ->
-                split.getOrPut(sample.state) { CoroutineStatesInfo(sample.state) }.addDump(sample.dumpId)
             }
 
             return split

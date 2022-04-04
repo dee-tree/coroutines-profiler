@@ -18,7 +18,8 @@ fun transform(
             onNewCoroutineFound(ProfilingCoroutineInfo(
                 coroutine.id,
                 coroutine.findParent(dump)?.id,
-                coroutine.creationStackTrace.map { it.toString() }
+                coroutine.creationStackTrace.map { it.toString() },
+                coroutine.job?.let { it::class.simpleName }
             ))
         }
 

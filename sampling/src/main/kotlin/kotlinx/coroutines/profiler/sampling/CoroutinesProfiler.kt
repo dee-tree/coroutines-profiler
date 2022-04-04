@@ -9,26 +9,35 @@ import kotlin.system.measureTimeMillis
 @ExperimentalCoroutinesApi
 internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
 
+    private var running = false
+
     fun attachAndRun(timeInterval: Long = 5) {
-        val attachedThread = Thread.currentThread()
-        thread {
-            Runtime.getRuntime().addShutdownHook(thread(false) {
+        running = true
+
+        Runtime.getRuntime().addShutdownHook(thread(false) {
+            running = false
             System.err.println("Interrupting profiler...")
             println("Interrupting profiler...")
+            DebugProbes.uninstall()
             dumpWriter.stop()
+            println("-".repeat(10))
+            println("Total samples count: $totalSamples")
+            println("Total sample time: $totalSampledTime ms")
+            println("Mean sample time: ${totalSampledTime / totalSamples} ms")
+            println("Total debug probes dump time: $totalDebugProbesDumpTime ms")
         })
 
-            DebugProbes.install()
-//            DebugProbes.delayedCreationStackTraces = true
-            DebugProbes.sanitizeStackTraces = false
+        DebugProbes.install()
+        DebugProbes.delayedCreationStackTraces = true
+        DebugProbes.sanitizeStackTraces = false
+
+        thread(isDaemon = true) {
             println("creation stack traces: ${DebugProbes.enableCreationStackTraces}")
             println("delayed creation stack traces: ${DebugProbes.delayedCreationStackTraces}")
 
-            var totalSampledTime = 0L
-            var totalSamples = 0
 
             var dumpId = 0L
-            while (attachedThread.isAlive) {
+            while (running) {
                 val sampleTime = measureTimeMillis {
                     sample(dumpId)
                 }.also {
@@ -43,21 +52,14 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
                 }
                 dumpId++
             }
-
-//            dumpWriter.stop()
-
-            DebugProbes.uninstall()
-
-            println("-".repeat(10))
-            println("Total samples count: $totalSamples")
-            println("Total sample time: $totalSampledTime ms")
-            println("Mean sample time: ${totalSampledTime / totalSamples} ms")
-            println("Total debug probes dump time: $totalDebugProbesDumpTime ms")
         }
     }
 
     private var totalDebugProbesDumpTime = 0L
+    private var totalSampledTime = 0L
+    private var totalSamples = 0
 
+    @Suppress("DEPRECATION_ERROR") // JobSupport
     private fun sample(dumpId: Long) {
         val dump: List<CoroutineInfo>
         measureTimeMillis {
@@ -72,7 +74,13 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
             println("Found new coroutine: ${it}")
         }
 
-        println("Dump. Samples: ${samples.size}")
+        println("Dump #$dumpId")
+        samples.forEach {
+            println(it)
+        }
+
+        println("----")
+
         dumpWriter.dumpSamples(samples)
     }
 
