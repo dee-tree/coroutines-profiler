@@ -1,26 +1,23 @@
 package kotlinx.coroutines.profiler.visual
 
 import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineInfo
-import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineSample
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.profiler.sampling.ProfilingResults
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.decodeFromByteArray
 import java.io.File
+import java.util.zip.GZIPInputStream
 
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 fun main(args: Array<String>) {
-    // first: coroutines list dump file
-    // second: samples dump file
+    println("args: $args")
+    // arg: coroutines dumps file
+    val coroutinesDumpsFile = File(args[0])
 
-    println("first: ${args[0]}")
-    println("second: ${args[1]}")
+    val profilingResults = Cbor.decodeFromByteArray<ProfilingResults>(GZIPInputStream(File(args[0]).inputStream()).readBytes())
 
-    val coroutinesListDumpFile = File(args[0])
-    val samplesDumpFile = File(args[1])
-
-
-    val coroutinesList = Json.decodeFromString<List<ProfilingCoroutineInfo>>(coroutinesListDumpFile.readText())
-    val samples = Json.decodeFromString<List<ProfilingCoroutineSample>>(samplesDumpFile.readText())
+    val coroutinesList = profilingResults.structure
+    val samples = profilingResults.samples
 
     val rootCoroutines = ProfilingCoroutineInfo.fromDump(coroutinesList, samples)
 
@@ -32,5 +29,5 @@ fun main(args: Array<String>) {
         showCoroutineStatesRanges(it)
     }
 
-    generateHtmlContent(rootCoroutines, File("/Users/Dmitry.Sokolov/ideaProjects/coroutines-profiler/sampling/out/dumps/notSpecified"))
+    generateHtmlContent(rootCoroutines, File(args[0]).parentFile)
 }

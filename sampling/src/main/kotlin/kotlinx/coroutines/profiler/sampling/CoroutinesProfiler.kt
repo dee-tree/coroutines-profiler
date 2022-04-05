@@ -3,6 +3,7 @@ package kotlinx.coroutines.profiler.sampling
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.debug.CoroutineInfo
 import kotlinx.coroutines.debug.DebugProbes
+import kotlinx.coroutines.profiler.sampling.writers.DumpWriter
 import kotlin.concurrent.thread
 import kotlin.system.measureTimeMillis
 

@@ -20,6 +20,7 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(project(":sampling"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.3.2")
     implementation("com.jakewharton.picnic:picnic:0.6.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
@@ -34,8 +35,7 @@ application {
 
 tasks.create<JavaExec>("runWithLastDump") {
     args(
-        "W:\\Kotlin\\Projects\\coroutines-profiler\\sampling\\out\\dumps\\notSpecified\\coro-profiling-all.json",
-        "W:\\Kotlin\\Projects\\coroutines-profiler\\sampling\\out\\dumps\\notSpecified\\coro-profiling-samples.json"
+        "W:\\Kotlin\\Projects\\coroutines-profiler\\sample-app\\out\\results\\profile\\profiling_results.cbor"
     )
 
     classpath(sourceSets["main"].runtimeClasspath)
