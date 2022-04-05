@@ -8,6 +8,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
+@Deprecated("Ineffective, use ProtobufDumpWriter")
 @ExperimentalCoroutinesApi
 internal class JsonDumpWriter(private val dumpFolder: File) : DumpWriter {
 

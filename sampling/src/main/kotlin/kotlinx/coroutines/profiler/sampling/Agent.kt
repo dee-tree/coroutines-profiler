@@ -1,13 +1,12 @@
 package kotlinx.coroutines.profiler.sampling
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.profiler.sampling.writers.CborDumpWriter
 import kotlinx.coroutines.profiler.sampling.writers.Compression
+import kotlinx.coroutines.profiler.sampling.writers.ProtobufDumpWriter
 import java.io.File
 import java.lang.instrument.Instrumentation
 
 object Agent {
-
     @ExperimentalCoroutinesApi
     @JvmStatic
     fun premain(args: String?, instrumentation: Instrumentation) {
@@ -17,10 +16,11 @@ object Agent {
 
         println("agent runs on PID ${ProcessHandle.current().pid()}")
 
+        val samplingInterval = 5L
+
         val dumpsDirectory = File(args?.getOrNull(1) ?: "out/results/profile")
-//        val dumpWriter = JsonDumpWriter(dumpsDirectory)
-        val dumpWriter = CborDumpWriter(dumpsDirectory, Compression.GZIP)
-        CoroutinesProfiler(dumpWriter).attachAndRun(5)
+        val dumpWriter = ProtobufDumpWriter(dumpsDirectory, Compression.GZIP, samplingInterval)
+        CoroutinesProfiler(dumpWriter).attachAndRun(samplingInterval)
     }
 
 }

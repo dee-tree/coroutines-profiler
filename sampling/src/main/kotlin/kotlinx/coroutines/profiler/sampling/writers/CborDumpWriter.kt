@@ -9,6 +9,7 @@ import kotlinx.serialization.encodeToByteArray
 import java.io.File
 import java.util.zip.GZIPOutputStream
 
+@Deprecated("Ineffective, use ProtobufDumpWriter")
 @ExperimentalCoroutinesApi
 internal class CborDumpWriter(
     private val dumpFolder: File,
@@ -43,14 +44,11 @@ internal class CborDumpWriter(
             Compression.GZIP -> GZIPOutputStream(fos)
         }
 
-        outputStream.apply {
-            write(Cbor.encodeToByteArray(ProfilingResults(coroutines, samples)))
-            close()
+        outputStream.use {
+            it.write(Cbor.encodeToByteArray(ProfilingResults(coroutines, samples)))
         }
 
-
-
-
+        File(dumpFolder, "profiling_results_nocomp.cbor").writeBytes(Cbor.encodeToByteArray(coroutines))
     }
 
 

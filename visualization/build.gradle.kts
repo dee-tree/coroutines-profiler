@@ -35,7 +35,7 @@ application {
 
 tasks.create<JavaExec>("runWithLastDump") {
     args(
-        "W:\\Kotlin\\Projects\\coroutines-profiler\\sample-app\\out\\results\\profile\\profiling_results.cbor"
+        "W:\\Kotlin\\Projects\\coroutines-profiler\\sample-app\\out\\results\\profile\\profiling_results.json"
     )
 
     classpath(sourceSets["main"].runtimeClasspath)

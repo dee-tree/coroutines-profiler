@@ -14,12 +14,9 @@ fun main(args: Array<String>) {
     // arg: coroutines dumps file
     val coroutinesDumpsFile = File(args[0])
 
-    val profilingResults = Cbor.decodeFromByteArray<ProfilingResults>(GZIPInputStream(File(args[0]).inputStream()).readBytes())
+    val profilingResults = ProfilingResults.readFromFile(coroutinesDumpsFile)
 
-    val coroutinesList = profilingResults.structure
-    val samples = profilingResults.samples
-
-    val rootCoroutines = ProfilingCoroutineInfo.fromDump(coroutinesList, samples)
+    val rootCoroutines = ProfilingCoroutineInfo.fromDump(profilingResults.structure, profilingResults.samples)
 
     showCommonCoroutinesTable(rootCoroutines)
 

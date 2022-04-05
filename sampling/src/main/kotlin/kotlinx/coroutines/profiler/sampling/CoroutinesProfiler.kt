@@ -30,7 +30,7 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
 
         DebugProbes.install()
         DebugProbes.delayedCreationStackTraces = true
-        DebugProbes.sanitizeStackTraces = false
+        DebugProbes.sanitizeStackTraces = true
 
         thread(isDaemon = true) {
             println("creation stack traces: ${DebugProbes.enableCreationStackTraces}")
