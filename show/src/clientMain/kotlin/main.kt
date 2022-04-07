@@ -1,37 +1,48 @@
-import csstype.EmptyCells.Companion.show
 import io.ktor.client.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
+import io.ktor.client.request.*
 import kotlinx.browser.document
+import kotlinx.browser.window
+import kotlinx.coroutines.profiler.show.ProfilingInfo
+import react.create
+import react.dom.render
+
+val endpoint = window.location.origin
+
+lateinit var client: HttpClient
 
 fun main() {
+    client = HttpClient {
+        install(JsonFeature) {
+            serializer = KotlinxSerializer()
+        }
+    }
 
-    println("Main in js!")
-//    val client = HttpClient()
+    val container = document.getElementById("root")!!
+    container.innerHTML = "Hello, Kotlin/JS!"
 
-    document.bgColor = "#AAAAAA"
-//    val response = client.get<HttpResponse>("localhost:9090/")
-    document.getElementById("root")?.innerHTML = "Hello, Kotlin/JS!"
+    render(App.create(), container)
 
-
-//    println(elementAt(listOf(1,2,3), 1))
-
-//    flamegraph()
-    println("hi: ${hi()}")
-//    println(js("hi.call()"))
+    println("Get flamegraph: ${flamegraph()}")
 
     println("Sorted: ${sorted(arrayOf(1, 2, 3))}")
     println("Sorted: ${sorted(arrayOf(3, 1,2 ))}")
 }
 
-external fun alert(message: Any?): Unit
-
-//@JsModule("coroutines-profiler-show-client")
-@JsName("hi")
-external fun hi()
+suspend fun getProfilingInfo(): ProfilingInfo {
+    return client.get<ProfilingInfo>("${endpoint}/profilingInfo")
+}
 
 @JsModule("d3-flame-graph")
 @JsNonModule
-external fun flamegraph()
+@JsName("flamegraph")
+external fun flamegraph(): FlameGraph
 
+
+@JsModule("d3-flame-graph")
+@JsNonModule
+external interface FlameGraph
 
 
 @JsModule("is-sorted")

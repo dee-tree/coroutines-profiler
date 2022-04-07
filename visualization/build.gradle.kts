@@ -30,18 +30,6 @@ dependencies {
 
 val mainClassQualifiedName = "kotlinx.coroutines.profiler.visual.MainKt"
 
-//kotlin {
-//    js {
-//        browser {
-//
-//        }
-//        binaries.executable()
-//    }
-//
-//    sourceSets {
-//        val main by getting
-//    }
-//}
 
 //application {
 //    mainClass.set(mainClassQualifiedName)

@@ -72,7 +72,7 @@ data class ProfilingResults(
 
 @ExperimentalSerializationApi
 @kotlinx.serialization.Serializable
-private data class ProfilingResultsFile(
+data class ProfilingResultsFile(
     val structureFilePath: String,
     val samplesFilePath: String,
     val coroutinesCount: Int,
