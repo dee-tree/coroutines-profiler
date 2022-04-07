@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="show-js-1.0-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/show/build/libs</output-path>
+    <root id="archive" name="show-js-1.0-SNAPSHOT.jar">
+      <element id="module-output" name="coroutines-profiler.show.jsMain" />
+    </root>
+  </artifact>
+</component>

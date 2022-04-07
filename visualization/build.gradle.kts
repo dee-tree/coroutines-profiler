@@ -1,5 +1,6 @@
 
 plugins {
+//    kotlin("js") version "1.6.10"
     kotlin("jvm") version "1.6.10"
     application
     kotlin("plugin.serialization") version "1.6.10"
@@ -29,20 +30,35 @@ dependencies {
 
 val mainClassQualifiedName = "kotlinx.coroutines.profiler.visual.MainKt"
 
-application {
-    mainClass.set(mainClassQualifiedName)
-}
+//kotlin {
+//    js {
+//        browser {
+//
+//        }
+//        binaries.executable()
+//    }
+//
+//    sourceSets {
+//        val main by getting
+//    }
+//}
 
-tasks.create<JavaExec>("runWithLastDump") {
-    args(
-        "W:\\Kotlin\\Projects\\coroutines-profiler\\sample-app\\out\\results\\profile\\profiling_results.json"
-    )
+//application {
+//    mainClass.set(mainClassQualifiedName)
+//}
 
-    classpath(sourceSets["main"].runtimeClasspath)
-    mainClass.set(mainClassQualifiedName)
-}
-
-tasks.create("runAllCycle") {
-        dependsOn(":sample-app:runWithProfiler")
-        dependsOn(":visualization:runWithLastDump")
-}
+//tasks.create<JavaExec>("runWithLastDump") {
+//    args(
+//        "W:\\Kotlin\\Projects\\coroutines-profiler\\sample-app\\out\\results\\profile\\profiling_results.json"
+//    )
+//
+//    println("Srcss: ${sourceSets.names}")
+//
+//    classpath(sourceSets["main"].runtimeClasspath)
+//    mainClass.set(mainClassQualifiedName)
+//}
+//
+//tasks.create("runAllCycle") {
+//        dependsOn(":sample-app:runWithProfiler")
+//        dependsOn(":visualization:runWithLastDump")
+//}

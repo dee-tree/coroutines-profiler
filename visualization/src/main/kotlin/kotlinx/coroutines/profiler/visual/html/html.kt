@@ -1,6 +1,7 @@
-package kotlinx.coroutines.profiler.visual
+package kotlinx.coroutines.profiler.visual.html
 
 import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineInfo
+import kotlinx.coroutines.profiler.visual.toFlameJson
 import java.io.File
 
 @Suppress("EXPERIMENTAL_API_USAGE")
