@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
-
 plugins {
     kotlin("multiplatform") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
@@ -23,18 +21,14 @@ application {
 
 kotlin {
 
-    js("client") {
+    js("client", IR) {
         browser {
-            webpackTask {
-                println("Webpack task called! output file: ${outputFile}")
-            }
-
             binaries.executable()
         }
     }
 
     jvm("server") {
-        withJava()
+//        withJava()
         compilations {
             val main by getting {
                 tasks.named<Jar>("serverJar") {
@@ -86,8 +80,8 @@ kotlin {
 
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
-                implementation(npm("is-sorted", "1.0.5"))
                 implementation(npm("d3-flame-graph", "4.1.3"))
+                implementation(npm("d3", "7.4.3"))
             }
         }
     }
@@ -101,7 +95,7 @@ tasks.named<Jar>("serverJar") {
     } else {
         "clientBrowserDevelopmentWebpack"
     }
-    val webpackTask = tasks.getByName<KotlinWebpack>(taskName)
+    val webpackTask = tasks.getByName<org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack>(taskName)
     dependsOn(webpackTask) // make sure JS gets compiled first
     from(File(webpackTask.destinationDirectory, webpackTask.outputFileName)) // bring output file along into the JAR
 }
@@ -118,6 +112,10 @@ distributions {
 }
 
 tasks.named<JavaExec>("run") {
+    jvmArgs(
+        "-Dio.ktor.development=true"
+    )
+
     args (
         "W:\\Kotlin\\Projects\\coroutines-profiler\\sample-app\\out\\results\\profile\\profiling_results.json"
     )

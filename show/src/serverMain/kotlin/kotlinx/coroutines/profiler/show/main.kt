@@ -1,3 +1,4 @@
+@file:Suppress("EXPERIMENTAL_API_USAGE")
 package kotlinx.coroutines.profiler.show
 
 import io.ktor.application.*
@@ -18,7 +19,7 @@ private lateinit var profilingResults: ProfilingResultsFile
 
 fun main(args: Array<String>) {
     // arg is path to profiling result file
-    embeddedServer(Netty, 9090) {
+    embeddedServer(Netty, 9090, watchPaths = listOf("classes", "resources")) {
         install(ContentNegotiation) {
             json()
         }
@@ -30,9 +31,9 @@ fun main(args: Array<String>) {
                     ContentType.Text.Html
                 )
             }
-            static("/") {
-                resources("")
-            }
+//            static("/") {
+//                resources("")
+//            }
 
             get("/profilingInfo") {
                 loadProfilingResults(File(args[0]))
@@ -44,10 +45,12 @@ fun main(args: Array<String>) {
 
                 val rootCoroutines = ProfilingCoroutineInfo.fromDump(results.structure, results.samples)
 
-                val flameJson = File("coro-stacks.json")
-                rootCoroutines.toFlameJson(flameJson.outputStream())
+//                val flameJson = File("coro-stacks.json")
 
-//                call.respondText(flameJson, ContentType.Application.Json)
+                val sampleFrame = rootCoroutines.toSampleFrame()
+//                call.respond(SampleFrame("KEK", 200, stacktrace = listOf(), samples = 200))
+                call.respond(sampleFrame/*.copy(children = null)*/)
+//                call.respondText(rootCoroutines.toSampleFrame(), ContentType.Application.Json)
 //                val rootCoroutines = ProfilingCoroutineInfo.fromDump(profilingResults.structure, profilingResults.samples)
             }
 

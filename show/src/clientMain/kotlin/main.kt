@@ -1,3 +1,5 @@
+import flamegraph.flamegraph
+import flamegraph.select
 import io.ktor.client.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
@@ -5,6 +7,7 @@ import io.ktor.client.request.*
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.profiler.show.ProfilingInfo
+import kotlinx.coroutines.profiler.show.SampleFrame
 import react.create
 import react.dom.render
 
@@ -24,27 +27,19 @@ fun main() {
 
     render(App.create(), container)
 
-    println("Get flamegraph: ${flamegraph()}")
 
-    println("Sorted: ${sorted(arrayOf(1, 2, 3))}")
-    println("Sorted: ${sorted(arrayOf(3, 1,2 ))}")
+
+
 }
 
 suspend fun getProfilingInfo(): ProfilingInfo {
     return client.get<ProfilingInfo>("${endpoint}/profilingInfo")
 }
 
-@JsModule("d3-flame-graph")
-@JsNonModule
-@JsName("flamegraph")
-external fun flamegraph(): FlameGraph
+suspend fun getStacks(): SampleFrame {
+    return client.get<SampleFrame>("${endpoint}/stacks")
+}
 
-
-@JsModule("d3-flame-graph")
-@JsNonModule
-external interface FlameGraph
-
-
-@JsModule("is-sorted")
-@JsNonModule
-external fun <T> sorted(a: Array<T>): Boolean
+//fun SampleFrame.toJSON(): JSON {
+//    return JSON.
+//}

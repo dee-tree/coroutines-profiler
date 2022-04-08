@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/d3-flame-graph@4.1.3/dist/d3-flamegraph.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+
     <meta charset="UTF-8">
     <title id="title">Coroutines profiler</title>
 </head>
 <body>
 <div id="root"></div>
+<div class="header clearfix">
+    <nav>
+        <div class="pull-right">
+            <form class="form-inline" id="form">
+                <a class="btn" href="javascript: resetZoom();">Reset zoom</a>
+                <a class="btn" href="javascript: clear();">Clear</a>
+                <a class="btn" href="javascript: clear();">Clear another</a>
+                <div class="form-group">
+                    <input type="text" class="form-control" id="term"/>
+                </div>
+                <a class="btn btn-primary" href="javascript: search();">Search</a>
+            </form>
+        </div>
+    </nav>
+    <h3 class="text-muted">Coroutines Profiler results</h3>
+</div>
+<div id="coroutinesFlame"></div>
 <script src="show.js"></script>
 </body>
 </html>
