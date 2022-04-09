@@ -1,6 +1,7 @@
 package kotlinx.coroutines.profiler.sampling
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.profiler.sampling.internals.ProfilingCoroutineDump
 import kotlinx.serialization.Transient
 
 @kotlinx.serialization.Serializable
@@ -13,9 +14,9 @@ data class ProfilingCoroutineInfo internal constructor(
 ) {
 
     @Transient
-    private val _samples = mutableListOf<ProfilingCoroutineSample>()
+    private val _probes = mutableListOf<ProfilingCoroutineProbe>()
     @Transient
-    val samples: List<ProfilingCoroutineSample> = _samples
+    val probes: List<ProfilingCoroutineProbe> = _probes
 
     @Transient
     private val _children = mutableListOf<ProfilingCoroutineInfo>()
@@ -23,12 +24,12 @@ data class ProfilingCoroutineInfo internal constructor(
     @Transient
     val children: List<ProfilingCoroutineInfo> = _children
 
-    fun addChild(childCoroutine: ProfilingCoroutineInfo) {
+    internal fun addChild(childCoroutine: ProfilingCoroutineInfo) {
         _children.add(childCoroutine)
     }
 
-    fun addSample(sample: ProfilingCoroutineSample) {
-        _samples.add(sample)
+    internal fun addProbe(probe: ProfilingCoroutineProbe) {
+        _probes.add(probe)
     }
 
     fun walk(action: (ProfilingCoroutineInfo) -> Unit) {
@@ -56,9 +57,8 @@ data class ProfilingCoroutineInfo internal constructor(
     override fun toString(): String = asString(0)
 
     companion object {
-        fun fromDump(
+        fun ProfilingCoroutineDump.fromDump(
             coroutines: List<ProfilingCoroutineInfo>,
-            samples: List<ProfilingCoroutineSample>
         ): List<ProfilingCoroutineInfo> {
             val rootCoroutines = mutableListOf<ProfilingCoroutineInfo>()
             val coroutineById = mutableMapOf<Long, ProfilingCoroutineInfo>()
@@ -75,8 +75,8 @@ data class ProfilingCoroutineInfo internal constructor(
                 coroutineById[coroutine.id] = coroutine
             }
 
-            samples.forEach { sample ->
-                coroutineById[sample.coroutineId]?.addSample(sample) ?: throw IllegalArgumentException("Hey dude! It's funny that sample for coroutine #${sample.coroutineId} was catched, but it doesn't exist... ")
+            dump.forEach { probe ->
+                coroutineById[probe.coroutineId]!!.addProbe(probe)
             }
 
             return rootCoroutines

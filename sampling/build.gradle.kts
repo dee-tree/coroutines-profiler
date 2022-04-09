@@ -18,10 +18,13 @@ version = "1.0-SNAPSHOT"
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0-SNAPSHOT")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
+
+    // cli arguments parser
+    implementation("com.xenomachina:kotlin-argparser:2.0.7")
+
     testImplementation(kotlin("test"))
 }
 
@@ -44,7 +47,7 @@ tasks.create<Jar>("fatJar") {
 
     manifest {
         attributes["Manifest-Version"] = "1.0"
-        attributes["Premain-Class"] = "kotlinx.coroutines.profiler.sampling.Agent"
+        attributes["Premain-Class"] = "kotlinx.coroutines.profiler.sampling.agent.Agent"
         attributes["Can-Redefine-Classes"] = "true"
         attributes["Can-Retransform-Classes"] = "true"
     }

@@ -6,17 +6,23 @@ import kotlinx.coroutines.debug.State
 
 @kotlinx.serialization.Serializable
 @ExperimentalCoroutinesApi
-data class ProfilingCoroutineSample(
-    val dumpId: Long,
+data class ProfilingCoroutineProbe(
+    /**
+     * id of probe when this sample was achieved
+     */
+    val probeId: Int,
     val coroutineId: Long,
     val state: State,
     val currentThreadName: String?,
-    val currentStackTrace: List<String>
+    /**
+     * stacktrace on suspension and resumption points
+     */
+    val lastUpdatedStackTrace: List<String>
 ) {
 
     companion object {
-        fun fromCoroutineInfo(delegate: CoroutineInfo, dumpId: Long) = ProfilingCoroutineSample(
-            dumpId,
+        fun fromCoroutineInfo(delegate: CoroutineInfo, probeId: Int) = ProfilingCoroutineProbe(
+            probeId,
             delegate.id,
             delegate.state,
             delegate.lastObservedThread?.name,

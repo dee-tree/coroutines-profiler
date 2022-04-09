@@ -1,18 +1,24 @@
 package kotlinx.coroutines.profiler.sampling
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.debug.CoroutineInfo
 import kotlinx.coroutines.debug.DebugProbes
+import kotlinx.coroutines.profiler.sampling.agent.args.DEFAULT_SHOULD_INTERNAL_STATISTICS_BE_COLLECTED
+import kotlinx.coroutines.profiler.sampling.internals.ProfilingCoroutineDump
+import kotlinx.coroutines.profiler.sampling.internals.Sampler
 import kotlinx.coroutines.profiler.sampling.writers.DumpWriter
 import kotlin.concurrent.thread
 import kotlin.system.measureTimeMillis
 
 @ExperimentalCoroutinesApi
-internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
+class CoroutinesProfiler(
+    private val dumpWriter: DumpWriter,
+    private val sampler: Sampler,
+    val collectInternalStatistics: Boolean = DEFAULT_SHOULD_INTERNAL_STATISTICS_BE_COLLECTED
+) {
 
     private var running = false
 
-    fun attachAndRun(timeInterval: Long = 5) {
+    fun attachAndRun(timeInterval: Int = 5) {
         running = true
 
         Runtime.getRuntime().addShutdownHook(thread(false) {
@@ -20,12 +26,20 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
             System.err.println("Interrupting profiler...")
             println("Interrupting profiler...")
             DebugProbes.uninstall()
+
+            if (collectInternalStatistics) {
+                sampler.getInternalStatistics()!!.also {
+                    it.maxProbeHandlingTimeMillis = maxProbeHandlingTime
+                    it.meanProbeHandlingTimeMillis = totalProbeHandlingTime / totalProbes
+                    dumpWriter.setInternalStatistics(it.build())
+                }
+            }
+
             dumpWriter.stop()
             println("-".repeat(10))
-            println("Total samples count: $totalSamples")
-            println("Total sample time: $totalSampledTime ms")
-            println("Mean sample time: ${totalSampledTime / totalSamples} ms")
-            println("Total debug probes dump time: $totalDebugProbesDumpTime ms")
+            println("Total probes count: $totalProbes")
+            println("Total probe handling time: $totalProbeHandlingTime ms")
+            println("Mean probe handling time: ${totalProbeHandlingTime / totalProbes} ms")
         })
 
         DebugProbes.install()
@@ -36,53 +50,35 @@ internal class CoroutinesProfiler(private val dumpWriter: DumpWriter) {
             println("creation stack traces: ${DebugProbes.enableCreationStackTraces}")
             println("delayed creation stack traces: ${DebugProbes.delayedCreationStackTraces}")
 
-
-            var dumpId = 0L
             while (running) {
-                val sampleTime = measureTimeMillis {
-                    sample(dumpId)
+                val dump: ProfilingCoroutineDump
+
+                val probeHandlingTime = measureTimeMillis {
+                    dump = sampler.probe { newCoroutine ->
+                        dumpWriter.writeNewCoroutine(newCoroutine)
+                        println("Found new coroutine: ${newCoroutine}")
+                    }
                 }.also {
-                    totalSampledTime += it
-                    totalSamples++
+                    val handleTime = it.toInt()
+                    totalProbes++
+                    totalProbeHandlingTime += handleTime
+                    if (it > maxProbeHandlingTime) maxProbeHandlingTime = handleTime
                 }
 
-                val needSleep = timeInterval - sampleTime
+
+                dumpWriter.writeDump(dump)
+
+
+                val needSleep = timeInterval - probeHandlingTime
                 if (needSleep > 0)
-                    Thread.sleep(timeInterval) else {
-                    System.err.println("Oops... Too long sample! $sampleTime ms for Dump #${dumpId} ")
-                }
-                dumpId++
+                    Thread.sleep(timeInterval.toLong())
             }
         }
     }
 
-    private var totalDebugProbesDumpTime = 0L
-    private var totalSampledTime = 0L
-    private var totalSamples = 0
+    private var totalProbeHandlingTime = 0
+    private var maxProbeHandlingTime = 0
+    private var totalProbes = 0
 
-    @Suppress("DEPRECATION_ERROR") // JobSupport
-    private fun sample(dumpId: Long) {
-        val dump: List<CoroutineInfo>
-        measureTimeMillis {
-            dump = DebugProbes.dumpCoroutinesInfo()
-        }.also {
-            if (it > 5) System.err.println("DebugProbes#dumpCoroutinesInfo worked too much! $it ms")
-            totalDebugProbesDumpTime += it
-        }
-
-        val samples = transform(dump, dumpId) {
-            dumpWriter.dumpNewCoroutine(it)
-            println("Found new coroutine: ${it}")
-        }
-
-        println("Dump #$dumpId")
-        samples.forEach {
-            println(it)
-        }
-
-        println("----")
-
-        dumpWriter.dumpSamples(samples)
-    }
 
 }
