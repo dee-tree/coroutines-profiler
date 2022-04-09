@@ -3,132 +3,53 @@ package kotlinx.coroutines.profiler.show
 import kotlinx.coroutines.debug.State
 import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.show.CoroutineStatesRange.Companion.splitByStates
-import kotlinx.serialization.json.*
-import java.io.OutputStream
-
-
-/*@Suppress("EXPERIMENTAL_API_USAGE")
-fun List<ProfilingCoroutineInfo>.toFlameJson(out: OutputStream) {
-    val json = buildJsonObject {
-        put("name", "root")
-        val samplesTotally = maxOf { it.samples.last().dumpId }
-        put("value", samplesTotally)
-
-        putJsonArray("children") {
-            this@toFlameJson.forEach { rootCoroutine ->
-                rootCoroutine.toFlameJson(
-                    this,
-                    1.0 / size,
-                    0..samplesTotally
-                )
-            }
-        }
-    }
-
-    out.bufferedWriter().use {
-        it.write(json.toString())
-    }
-}*/
-
-
-/*@Suppress("EXPERIMENTAL_API_USAGE")
-private fun ProfilingCoroutineInfo.toFlameJson(
-    array: JsonArrayBuilder,
-    parentCoeff: Double,
-    parentDumpsIds: LongRange
-) {
-    val states = this@toFlameJson.splitByStates()
-
-    states.forEach { state ->
-
-        val samplesForThisParentState = state.samplesRange.intersect(parentDumpsIds).size
-        val width = (samplesForThisParentState * parentCoeff).toLong()
-        if (width > 0) {
-            array.addJsonObject {
-                put("name", "$name $id")
-                put("id", id)
-                put("state", state.state.toString())
-                put("samples", samplesForThisParentState)
-                put("stacktrace", state.lastStackTrace.joinToString(", "))
-                put("thread", state.thread)
-                put("value", width)
-                putJsonArray("children") {
-                    children.forEach { child ->
-                        child.toFlameJson(this, 1.0 / children.size, state.samplesRange)
-                    }
-                }
-            }
-        }
-    }
-}*/
+import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
+import kotlinx.coroutines.profiler.show.serialization.buildCoroutineProbeFrame
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-fun List<ProfilingCoroutineInfo>.toSampleFrame(): SampleFrame {
-    val root = buildSampleFrame {
+fun List<ProfilingCoroutineInfo>.toProbeFrame(): CoroutineProbeFrame {
+    val root = buildCoroutineProbeFrame {
         name = "root"
 
-        val samplesTotally = maxOf { it.samples.last().dumpId }.toInt()
+        val probesTotally = maxOf { it.probes.last().probeId }.toInt()
 
-        value = samplesTotally
+        value = probesTotally
 
-        this@toSampleFrame.forEach { rootCoroutine ->
+        this@toProbeFrame.forEach { rootCoroutine ->
             addChildren {
-                val list = rootCoroutine.toSampleFrames(1.0 / size, 0..samplesTotally)
-                println("roots: ${list}")
+                val list = rootCoroutine.toProbeFrames(1.0 / size, 0..probesTotally)
                 list
             }
         }
     }
-
-    println("Root: ${root.children}")
     return root
-
-//    val json = buildJsonObject {
-//        put("name", "root")
-//        val samplesTotally = maxOf { it.samples.last().dumpId }
-//        put("value", samplesTotally)
-//
-//        putJsonArray("children") {
-//            this@toFlameJson.forEach { rootCoroutine ->
-//                rootCoroutine.toFlameJson(
-//                    this,
-//                    1.0 / size,
-//                    0..samplesTotally
-//                )
-//            }
-//        }
-//    }
-//
-//    out.bufferedWriter().use {
-//        it.write(json.toString())
-//    }
 }
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-private fun ProfilingCoroutineInfo.toSampleFrames(
+private fun ProfilingCoroutineInfo.toProbeFrames(
     parentCompensationCoefficient: Double,
     parentDumpsIds: IntRange
-): List<SampleFrame> {
-    val states = this@toSampleFrames.splitByStates()
+): List<CoroutineProbeFrame> {
+    val states = this@toProbeFrames.splitByStates()
 
     return buildList {
         states.forEach { state ->
-            val samplesForThisParentState = state.samplesRange.intersect(parentDumpsIds).size
-            val width = (samplesForThisParentState * parentCompensationCoefficient).toInt()
+            val probesForThisParentState = state.probesRange.intersect(parentDumpsIds).size
+            val width = (probesForThisParentState * parentCompensationCoefficient).toInt()
             if (width > 0) {
 
-                val child = buildSampleFrame {
-                    name = "${this@toSampleFrames.name} ${this@toSampleFrames.id}"
-                    coroutineId = this@toSampleFrames.id
+                val child = buildCoroutineProbeFrame {
+                    name = "${this@toProbeFrames.name} ${this@toProbeFrames.id}"
+                    coroutineId = this@toProbeFrames.id
                     coroutineState = state.state.toString()
-                    samples = samplesForThisParentState
+                    probes = probesForThisParentState
                     stacktrace = state.lastStackTrace
                     thread = state.thread
                     value = width
 
-                    this@toSampleFrames.children.forEach {
+                    this@toProbeFrames.children.forEach {
                         addChildren {
-                            it.toSampleFrames(1.0 / children.size, state.samplesRange)
+                            it.toProbeFrames(1.0 / children.size, state.probesRange)
                         }
                     }
                 }
@@ -137,32 +58,6 @@ private fun ProfilingCoroutineInfo.toSampleFrames(
             }
         }
     }
-
-
-//    states.forEach { state ->
-//
-//        val samplesForThisParentState = state.samplesRange.intersect(parentDumpsIds).size
-//        val width = (samplesForThisParentState * parentCompensationCoefficient).toLong()
-//        if (width > 0) {
-//
-//
-//
-//            array.addJsonObject {
-//                put("name", "$name $id")
-//                put("id", id)
-//                put("state", state.state.toString())
-//                put("samples", samplesForThisParentState)
-//                put("stacktrace", state.lastStackTrace.joinToString(", "))
-//                put("thread", state.thread)
-//                put("value", width)
-//                putJsonArray("children") {
-//                    children.forEach { child ->
-//                        child.toFlameJson(this, 1.0 / children.size, state.samplesRange)
-//                    }
-//                }
-//            }
-//        }
-//    }
 }
 
 
@@ -171,33 +66,33 @@ internal class CoroutineStatesRange private constructor(
     val state: State,
     val thread: String?,
     val lastStackTrace: List<String>,
-    fromSample: Int,
-    toSample: Int
+    fromProbeId: Int,
+    toProbeId: Int
 ) {
-    private var _fromSample = fromSample
-    private var _toSample = toSample
+    private var _fromProbeId = fromProbeId
+    private var _toProbeId = toProbeId
 
-    val fromSample get() = _fromSample
-    val toSample get() = _toSample
+    val fromProbeId get() = _fromProbeId
+    val toProbeId get() = _toProbeId
 
-    val samplesRange get() = fromSample..toSample
+    val probesRange get() = fromProbeId..toProbeId
 
     companion object {
         internal fun ProfilingCoroutineInfo.splitByStates(): List<CoroutineStatesRange> {
             val split = mutableListOf<CoroutineStatesRange>()
 
-            samples.forEach {
+            probes.forEach {
                 val last = split.lastOrNull()
-                if (it.state == last?.state && it.currentThreadName == last.thread && it.currentStackTrace == last.lastStackTrace) {
-                    split[split.lastIndex]._toSample = it.dumpId.toInt()
+                if (it.state == last?.state && it.currentThreadName == last.thread && it.lastUpdatedStackTrace == last.lastStackTrace) {
+                    split[split.lastIndex]._toProbeId = it.probeId
                 } else {
                     split.add(
                         CoroutineStatesRange(
                             it.state,
                             it.currentThreadName,
-                            it.currentStackTrace,
-                            it.dumpId.toInt(),
-                            it.dumpId.toInt()
+                            it.lastUpdatedStackTrace,
+                            it.probeId,
+                            it.probeId
                         )
                     )
                 }

@@ -15,7 +15,7 @@ value class CoroutinesStructure(
     val structure: List<ProfilingCoroutineInfo>
 ) {
     companion object {
-        fun readFromStream(input: InputStream): CoroutinesStructure = CoroutinesStructure(buildList {
+        internal fun readFromStream(input: InputStream): CoroutinesStructure = CoroutinesStructure(buildList {
             while (input.available() != 0) {
                 val coroutineInfoSize = input.readNBytes(Int.SIZE_BYTES).toInt()
                 val sample = ProtoBuf.decodeFromByteArray<ProfilingCoroutineInfo>(input.readNBytes(coroutineInfoSize))

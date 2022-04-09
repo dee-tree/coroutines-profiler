@@ -1,6 +1,8 @@
 package kotlinx.coroutines.profiler.sampling
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.profiler.sampling.data.CoroutinesProbes
+import kotlinx.coroutines.profiler.sampling.data.CoroutinesStructure
 import kotlinx.coroutines.profiler.sampling.internals.ProfilingCoroutineDump
 import kotlinx.serialization.Transient
 
@@ -57,13 +59,14 @@ data class ProfilingCoroutineInfo internal constructor(
     override fun toString(): String = asString(0)
 
     companion object {
-        fun ProfilingCoroutineDump.fromDump(
-            coroutines: List<ProfilingCoroutineInfo>,
+        fun CoroutinesProbes.bindWithInfos(
+            coroutines: CoroutinesStructure,
+//            coroutines: List<ProfilingCoroutineInfo>,
         ): List<ProfilingCoroutineInfo> {
             val rootCoroutines = mutableListOf<ProfilingCoroutineInfo>()
             val coroutineById = mutableMapOf<Long, ProfilingCoroutineInfo>()
 
-            coroutines.forEach { coroutine ->
+            coroutines.structure.forEach { coroutine ->
                 val parent = coroutineById[coroutine.parentId]
 
                 if (parent == null) {
@@ -75,7 +78,7 @@ data class ProfilingCoroutineInfo internal constructor(
                 coroutineById[coroutine.id] = coroutine
             }
 
-            dump.forEach { probe ->
+            samples.forEach { probe ->
                 coroutineById[probe.coroutineId]!!.addProbe(probe)
             }
 

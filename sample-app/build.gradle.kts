@@ -51,9 +51,13 @@ tasks.create<JavaExec>("runWithProfiler") {
     classpath(sourceSets["main"].runtimeClasspath)
     mainClass.set(mainClassQualifiedName)
 
+//    val args = ""
+    val args = "-o \"out/results/profile\" -i 4 -s "
+    val agentPath = "${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
+
     jvmArgs(
         "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
-        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
+        "-javaagent:$agentPath=$args"
     )
 }
 

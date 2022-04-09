@@ -15,7 +15,7 @@ value class CoroutinesProbes(
     val samples: List<ProfilingCoroutineProbe>
 ) {
     companion object {
-        fun readFromStream(input: InputStream): CoroutinesProbes = CoroutinesProbes(buildList {
+        internal fun readFromStream(input: InputStream): CoroutinesProbes = CoroutinesProbes(buildList {
             while (input.available() != 0) {
                 val sampleSize = input.readNBytes(Int.SIZE_BYTES).toInt()
                 val sample = ProtoBuf.decodeFromByteArray<ProfilingCoroutineProbe>(input.readNBytes(sampleSize))
