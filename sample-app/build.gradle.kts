@@ -61,6 +61,12 @@ tasks.create<JavaExec>("runWithProfiler") {
     )
 }
 
+tasks.clean {
+    doFirst {
+        delete("out")
+    }
+}
+
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {

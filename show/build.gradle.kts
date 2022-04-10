@@ -87,6 +87,12 @@ kotlin {
     }
 }
 
+tasks.clean {
+    doFirst {
+        delete("out")
+    }
+}
+
 tasks.named<Jar>("serverJar") {
     val taskName = if (project.hasProperty("isProduction")
         || project.gradle.startParameter.taskNames.contains("installDist")
