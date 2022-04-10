@@ -11,7 +11,7 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.profiler.show.routes.profilingInfoRoute
 import kotlinx.coroutines.profiler.show.routes.stacksRoute
 import kotlinx.coroutines.profiler.show.routes.staticRoute
-import kotlinx.coroutines.profiler.show.storage.profilingResultsFile
+import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.profilingResultsFile
 import java.io.File
 
 
