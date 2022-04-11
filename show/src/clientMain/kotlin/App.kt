@@ -1,13 +1,11 @@
-import flamegraph.flamegraph
-import flamegraph.select
-import kotlinext.js.Object
+import csstype.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.show.serialization.ProfilingInfo
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToDynamic
+import kotlinx.coroutines.profiler.show.ui.CoroutinesFlameGraph
 import react.FC
 import react.Props
+import react.css.css
 import react.dom.html.ReactHTML.a
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.form
@@ -22,15 +20,9 @@ private val scope = MainScope()
 val App = FC<Props> {
     var profilingInfo by useState(ProfilingInfo(0, 0, 0))
 
-    val flamegraph = flamegraph()
-        .title("Coroutines flame graph for dump")
-
-
     useEffectOnce {
         scope.launch {
             profilingInfo = api.getProfilingInfo()
-
-            select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flamegraph)
         }
     }
 
@@ -57,11 +49,12 @@ val App = FC<Props> {
         className = "header clearfix"
         id = "navigation"
 
-//        css {
-//            paddingTop = Padding("10px")
-//            display = Display.flex
-//            justifyContent = JustifyContent.center
-//        }
+        css {
+            paddingTop = 10.px
+            display = Display.flex
+            flexDirection = FlexDirection.column
+            alignItems = AlignItems.center
+        }
 
         nav {
             div {
@@ -72,7 +65,7 @@ val App = FC<Props> {
 
                     a {
                         className = "btn"
-                        + "Reset zoom"
+                        +"Reset zoom"
                     }
                 }
             }
@@ -82,19 +75,31 @@ val App = FC<Props> {
     div {
         id = "content"
 
+        css {
+            paddingTop = 1.vh
+            display = Display.flex
+            flexDirection = FlexDirection.column
+            alignItems = AlignItems.center
+        }
+
 
         h3 {
-            + "Coroutines profiler"
+            +"Coroutines profiler"
         }
 
         h4 {
-            + "Coroutines: ${profilingInfo.coroutinesCount}\t\t"
-            + "Samples: ${profilingInfo.samplesCount}\t\t"
-            + "Time per sample: ${profilingInfo.probesIntervalMillis} ms"
+            +"Coroutines: ${profilingInfo.coroutinesCount}\t\t"
+            +"Samples: ${profilingInfo.samplesCount}\t\t"
+            +"Time per sample: ${profilingInfo.probesIntervalMillis} ms"
         }
 
-        div {
-            id = "flame"
+        CoroutinesFlameGraph() {
+            onFrameClicked = {
+                scope.launch {
+                    api.coroutine(it.coroutineId)
+                }
+
+            }
         }
     }
 

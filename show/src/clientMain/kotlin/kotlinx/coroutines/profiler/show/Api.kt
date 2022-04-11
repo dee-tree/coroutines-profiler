@@ -2,6 +2,7 @@ package kotlinx.coroutines.profiler.show
 
 import io.ktor.client.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import kotlinx.browser.window
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.coroutines.profiler.show.serialization.ProfilingInfo
@@ -16,5 +17,11 @@ class Api(private val client: HttpClient) {
 
     suspend fun getStacks(): CoroutineProbeFrame {
         return client.get<CoroutineProbeFrame>("${endpoint}/stacks")
+    }
+
+    suspend fun coroutine(coroutineId: Long): HttpResponse {
+        return client.get("${endpoint}/coroutine") {
+            parameter("id", coroutineId)
+        }
     }
 }

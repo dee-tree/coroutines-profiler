@@ -40,10 +40,20 @@ external interface FlameGraph {
     fun setDetailsHandler(): FlameGraph
     fun setSearchHandler(): FlameGraph
     fun setColorMapper(): FlameGraph
+    fun setColorMapper(colorMapper: (d: Any, originalColor: String) -> String): FlameGraph
     fun setColorHue(param_val: String): FlameGraph
     fun setColorHue(): FlameGraph
     fun setSearchMatch(): FlameGraph
     fun search(term: String)
     fun clear()
     fun destroy()
+
+    fun label(label: (d: Any) -> String)
+    fun onClick(label: (d: Any) -> Unit): FlameGraph
+}
+
+external interface StackFrame {
+    var name: String
+    var value: Number
+    var children: Array<StackFrame>
 }

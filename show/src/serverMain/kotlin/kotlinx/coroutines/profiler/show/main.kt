@@ -8,6 +8,7 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.profiler.show.routes.coroutineRoute
 import kotlinx.coroutines.profiler.show.routes.profilingInfoRoute
 import kotlinx.coroutines.profiler.show.routes.stacksRoute
 import kotlinx.coroutines.profiler.show.routes.staticRoute
@@ -28,6 +29,7 @@ fun main(args: Array<String>) {
             staticRoute()
             profilingInfoRoute()
             stacksRoute()
+            coroutineRoute()
         }
     }.start(wait = true)
 }

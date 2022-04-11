@@ -11,19 +11,27 @@ import kotlinx.serialization.SerialName
  */
 @kotlinx.serialization.Serializable
 data class CoroutineProbeFrame(
-    val name: String? = null,
+    val name: String,
     val value: Int,
     val children: List<CoroutineProbeFrame>? = null,
 
     @SerialName("id")
-    val coroutineId: Long? = null,
+    val coroutineId: Long,
     @SerialName("state")
-    val coroutineState: String? = null,
+    val coroutineState: String,
     val probesCount: Int,
     val stacktrace: List<String>,
     val thread: String? = null,
 ) {
 
+    fun walk(action: (CoroutineProbeFrame) -> Unit) {
+        action(this)
+
+        children?.forEach {
+            it.walk(action)
+        }
+
+    }
 }
 
 inline fun buildCoroutineProbeFrame(builderAction: CoroutineProbeFrameBuilder.() -> Unit): CoroutineProbeFrame {
@@ -33,14 +41,14 @@ inline fun buildCoroutineProbeFrame(builderAction: CoroutineProbeFrameBuilder.()
 }
 
 class CoroutineProbeFrameBuilder @PublishedApi internal constructor() {
-    var name: String? = null
+    var name: String = ""
     var value: Int = 0
     var probes: Int = 0
 
     private var childrenInitially: MutableList<CoroutineProbeFrame>? = null
 
-    var coroutineId: Long? = null
-    var coroutineState: String? = null
+    var coroutineId: Long = -1
+    var coroutineState: String = ""
     var stacktrace: List<String> = listOf()
     var thread: String? = null
 
