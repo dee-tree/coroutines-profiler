@@ -10,3 +10,7 @@
 /show/build/
 /.idea/encodings.xml
 /.idea/artifacts/
+/core/data/build/
+/core/data/out/
+/core/build/
+/core/out/
