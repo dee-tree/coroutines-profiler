@@ -6,6 +6,7 @@ import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo.Companion.addProbes
 import kotlinx.coroutines.profiler.core.data.StructuredProfilingCoroutineInfo.Companion.addProbes
 import kotlinx.coroutines.profiler.core.data.StructuredProfilingCoroutineInfo.Companion.toStructured
 import kotlinx.coroutines.profiler.core.data.loadProbes
@@ -39,8 +40,9 @@ fun Route.stacksRoute() {
             profilingResults.loadStructure()
         )
 
+        linearCoroutinesStructure.addProbes(coroutinesProbes.probes)
 
-        val structuredCoroutines = linearCoroutinesStructure.toStructured().addProbes(coroutinesProbes.probes)
+        val structuredCoroutines = linearCoroutinesStructure.toStructured()//.addProbes(coroutinesProbes.probes)
 
         val rootStackFrame = structuredCoroutines.toProbeFrame()
 

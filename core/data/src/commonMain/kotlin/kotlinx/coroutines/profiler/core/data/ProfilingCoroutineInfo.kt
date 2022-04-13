@@ -34,41 +34,26 @@ open class ProfilingCoroutineInfo(
             id, name, parentId, creationStackTrace,
             children.map {
                 it.toStructured(emptyList())
-//                StructuredProfilingCoroutineInfo(
-//                    it.id,
-//                    it.name,
-//                    it.parentId,
-//                    it.creationStackTrace,
-//                    emptyList(),
-//                    it._probes
-//                )
             }, _probes
         )
 
     override fun toString(): String {
         return "Coroutine(id=${id}, parent:${parentId})"
     }
-}
 
-//class ProfilingCoroutineInfoWithProbes(
-//    id: Long,
-//    name: String,
-//    parentId: Long?,
-//    creationStackTrace: List<String>,
-//    override val probes: List<CoroutineProbe>
-//) : ProfilingCoroutineInfo(id, name, parentId, creationStackTrace), WithProbes {
-//
-//    fun toStructured(children: List<ProfilingCoroutineInfoWithProbes> = emptyList()): StructuredProfilingCoroutineInfoWithProbes =
-//        StructuredProfilingCoroutineInfoWithProbes(
-//            id, name, parentId, creationStackTrace,
-//            children.map {
-//                StructuredProfilingCoroutineInfoWithProbes(
-//                    it.id, it.name, it.parentId, it.creationStackTrace, emptyList(), it.probes
-//                )
-//            },
-//            probes
-//        )
-//}
+    companion object {
+        fun LinearCoroutinesStructure.addProbes(
+            probes: List<CoroutineProbe>
+        ): LinearCoroutinesStructure {
+            probes.forEach { probe ->
+                this.coroutines.find {
+                    probe.coroutineId == it.id
+                }!!._probes.add(probe)
+            }
+            return this
+        }
+    }
+}
 
 
 open class StructuredProfilingCoroutineInfo(
@@ -154,73 +139,6 @@ open class StructuredProfilingCoroutineInfo(
     }
 
 }
-
-
-//class StructuredProfilingCoroutineInfoWithProbes(
-//    id: Long,
-//    name: String,
-//    parentId: Long?,
-//    creationStackTrace: List<String>,
-//    children: List<StructuredProfilingCoroutineInfoWithProbes>,
-//    probes: List<CoroutineProbe>
-//) : StructuredProfilingCoroutineInfo(id, name, parentId, creationStackTrace, children),
-//    Structured,
-//    WithProbes {
-//
-//
-//    private var _children: MutableList<StructuredProfilingCoroutineInfoWithProbes> = children.toMutableList()
-//    override val children: List<StructuredProfilingCoroutineInfoWithProbes>
-//        get() = _children
-//
-//    private var _probes: MutableList<CoroutineProbe> = probes.toMutableList()
-//    override val probes: List<CoroutineProbe>
-//        get() = _probes
-//
-//
-//
-//    fun findWithProbes(condition: (StructuredProfilingCoroutineInfoWithProbes) -> Boolean): StructuredProfilingCoroutineInfoWithProbes? {
-//        if (condition(this)) return this
-//
-//        children.forEach { child ->
-//            child.findWithProbes(condition)?.let { return it }
-//        }
-//
-//        return null
-//    }
-//
-//    override operator fun get(coroutineId: Long): StructuredProfilingCoroutineInfoWithProbes? = this.findWithProbes { it.id == coroutineId }
-//
-//
-//    companion object {
-////        fun StructuredProfilingCoroutineInfofromStructuredCoroutineInfo(
-////            info: StructuredProfilingCoroutineInfo,
-////            probes: List<CoroutineProbe>
-////        ): StructuredProfilingCoroutineInfoWithProbes {
-////            val infoWithProbes = info.toWithProbes()
-////
-////            probes.forEach { probe ->
-////                infoWithProbes[probe.coroutineId]!!._probes.add(probe)
-////            }
-////            return infoWithProbes
-////        }
-//
-////        fun CoroutinesStructure.addProbes(
-//////            infos: List<StructuredProfilingCoroutineInfo>,
-////            probes: List<CoroutineProbe>
-////        ): CoroutinesStructure {
-////
-//////            val infosWithProbes = this.structure.map { it.toWithProbes() }
-////
-////            probes.forEach { probe ->
-////
-////                this.structure.findInfo { probe.coroutineId == it.id }!!._probes.add(probe).also {
-//////                    println("Add probe: ${probe} to info: ${infosWithProbes.find { it[probe.coroutineId] != null }}")
-////                }
-////            }
-////            return infosWithProbes
-////        }
-//    }
-//}
 
 
 fun CoroutinesStructure.find(condition: (StructuredProfilingCoroutineInfo) -> Boolean): StructuredProfilingCoroutineInfo? {

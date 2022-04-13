@@ -8,10 +8,7 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlinx.coroutines.profiler.show.routes.coroutineRoute
-import kotlinx.coroutines.profiler.show.routes.profilingStatisticsRoute
-import kotlinx.coroutines.profiler.show.routes.stacksRoute
-import kotlinx.coroutines.profiler.show.routes.staticRoute
+import kotlinx.coroutines.profiler.show.routes.*
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage
 import java.io.File
 
@@ -30,6 +27,7 @@ fun main(args: Array<String>) {
             profilingStatisticsRoute()
             stacksRoute()
             coroutineRoute()
+            suspensionPointsCoroutineStackTraceRoute()
         }
     }.start(wait = true)
 }

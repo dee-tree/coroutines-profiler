@@ -1,10 +1,11 @@
 import csstype.*
+import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
+import kotlinx.coroutines.profiler.show.ui.CoroutineSuspensionsFlameGraph
 import kotlinx.coroutines.profiler.show.ui.CoroutinesFlameGraph
-import react.FC
-import react.Props
+import react.*
 import react.css.css
 import react.dom.html.ReactHTML.a
 import react.dom.html.ReactHTML.details
@@ -16,8 +17,8 @@ import react.dom.html.ReactHTML.h5
 import react.dom.html.ReactHTML.nav
 import react.dom.html.ReactHTML.p
 import react.dom.html.ReactHTML.summary
-import react.useEffectOnce
-import react.useState
+import react.dom.render
+import react.dom.unmountComponentAtNode
 
 private val scope = MainScope()
 
@@ -143,12 +144,25 @@ val App = FC<Props> {
         }
 
         CoroutinesFlameGraph() {
+
             onFrameClicked = {
                 scope.launch {
-                    api.coroutine(it.coroutineId)
+                    println("Selected coroutine ${it.coroutineId}")
+
+                    render(CoroutineSuspensionsFlameGraph.create() {
+                        this.coroutineId = it.coroutineId
+                    }, document.getElementById("suspensionsFlameContainer")!!)
                 }
 
             }
+
+            onExit = {
+                unmountComponentAtNode(document.getElementById("suspensionsFlameContainer")!!)
+            }
+        }
+
+        div {
+            id = "suspensionsFlameContainer"
         }
     }
 

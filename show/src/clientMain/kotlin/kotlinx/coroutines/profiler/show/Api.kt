@@ -2,10 +2,10 @@ package kotlinx.coroutines.profiler.show
 
 import io.ktor.client.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import kotlinx.browser.window
 import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
+import kotlinx.coroutines.profiler.show.serialization.CoroutineSuspensionsFrame
 
 class Api(private val client: HttpClient) {
 
@@ -19,8 +19,10 @@ class Api(private val client: HttpClient) {
         return client.get<CoroutineProbeFrame>("${endpoint}/stacks")
     }
 
-    suspend fun coroutine(coroutineId: Long): HttpResponse {
-        return client.get("${endpoint}/coroutine") {
+
+    suspend fun getSuspensionsStackTrace(coroutineId: Long): CoroutineSuspensionsFrame {
+        println("Intended to request suspensions stack trace for coroutine $coroutineId")
+        return client.get<CoroutineSuspensionsFrame>("${endpoint}/suspensionsStackTrace") {
             parameter("id", coroutineId)
         }
     }
