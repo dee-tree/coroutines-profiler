@@ -4,15 +4,15 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.browser.window
+import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
-import kotlinx.coroutines.profiler.show.serialization.ProfilingInfo
 
 class Api(private val client: HttpClient) {
 
     private val endpoint = window.location.origin
 
-    suspend fun getProfilingInfo(): ProfilingInfo {
-        return client.get<ProfilingInfo>("${endpoint}/profilingInfo")
+    suspend fun getProfilingStatistics(): ProfilingStatistics {
+        return client.get<ProfilingStatistics>("${endpoint}/profilingStatistics")
     }
 
     suspend fun getStacks(): CoroutineProbeFrame {

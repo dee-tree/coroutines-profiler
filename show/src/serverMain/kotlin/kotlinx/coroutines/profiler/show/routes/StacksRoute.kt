@@ -6,32 +6,43 @@ import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineInfo.Companion.bindWithInfos
-import kotlinx.coroutines.profiler.show.loadProfilingResults
+import kotlinx.coroutines.profiler.core.data.StructuredProfilingCoroutineInfo.Companion.addProbes
+import kotlinx.coroutines.profiler.core.data.StructuredProfilingCoroutineInfo.Companion.toStructured
+import kotlinx.coroutines.profiler.core.data.loadProbes
+import kotlinx.coroutines.profiler.core.data.loadStructure
+import kotlinx.coroutines.profiler.core.data.readProfilingResultsFile
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.coroutinesProbes
-import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.coroutinesStructure
+import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.linearCoroutinesStructure
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.profilingResults
-import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.profilingResultsFile
 import kotlinx.coroutines.profiler.show.toProbeFrame
 
 
 fun Route.stacksRoute() {
     get("/stacks") {
+        if (!ProfilingStorage.isProfilingResultsFileInitialized()) {
+            call.respond(HttpStatusCode.BadRequest, "Profiling file not loaded!")
+            return@get
+        }
 
-        if (!profilingResultsFile.exists()) {
+        if (!ProfilingStorage.profilingResultFile.exists()) {
             this.call.respond(HttpStatusCode.NotFound, "Profiling results not found!")
             return@get
         }
 
         if (!ProfilingStorage.isProfilingResultsInitialized()) {
-            loadProfilingResults(profilingResultsFile)
+            ProfilingStorage.setProfilingResults(readProfilingResultsFile(ProfilingStorage.profilingResultFile))
         }
 
-        coroutinesStructure = profilingResults.loadStructureFromFile()
-        coroutinesProbes = profilingResults.loadProbesFromFile()
-        val coroutines = coroutinesProbes.bindWithInfos(coroutinesStructure)
-        val rootStackFrame = coroutines.toProbeFrame()
+        ProfilingStorage.setCoroutinesProbes(profilingResults.loadProbes())
+        ProfilingStorage.setLinearCoroutinesStructure(
+            profilingResults.loadStructure()
+        )
+
+
+        val structuredCoroutines = linearCoroutinesStructure.toStructured().addProbes(coroutinesProbes.probes)
+
+        val rootStackFrame = structuredCoroutines.toProbeFrame()
 
         call.respond(rootStackFrame)
     }

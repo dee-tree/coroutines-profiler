@@ -9,16 +9,16 @@ import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.profiler.show.routes.coroutineRoute
-import kotlinx.coroutines.profiler.show.routes.profilingInfoRoute
+import kotlinx.coroutines.profiler.show.routes.profilingStatisticsRoute
 import kotlinx.coroutines.profiler.show.routes.stacksRoute
 import kotlinx.coroutines.profiler.show.routes.staticRoute
-import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.profilingResultsFile
+import kotlinx.coroutines.profiler.show.storage.ProfilingStorage
 import java.io.File
 
 
 fun main(args: Array<String>) {
     // arg is path to profiling result file
-    profilingResultsFile = File(args[0])
+    ProfilingStorage.setProfilingResultsFile(File(args[0]))
 
     embeddedServer(Netty, 9090, watchPaths = listOf("classes", "resources")) {
         install(ContentNegotiation) {
@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
 
         routing {
             staticRoute()
-            profilingInfoRoute()
+            profilingStatisticsRoute()
             stacksRoute()
             coroutineRoute()
         }

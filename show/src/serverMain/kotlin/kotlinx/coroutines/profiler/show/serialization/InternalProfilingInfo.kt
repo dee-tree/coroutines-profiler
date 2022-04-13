@@ -1,5 +1,0 @@
-package kotlinx.coroutines.profiler.show.serialization
-
-import kotlinx.coroutines.profiler.sampling.statistics.ProfilingInternalStatistics
-
-actual typealias InternalProfilingInfo = ProfilingInternalStatistics

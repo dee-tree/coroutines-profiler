@@ -7,6 +7,7 @@ import flamegraph.flamegraph
 import flamegraph.select
 import kotlinext.js.Object
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.serialization.json.Json
@@ -43,6 +44,7 @@ val CoroutinesFlameGraph = FC<CoroutinesFlameGraphProps> { props ->
 
     useEffectOnce {
         scope.launch {
+            delay(100)
             select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flamegraph)
         }
     }

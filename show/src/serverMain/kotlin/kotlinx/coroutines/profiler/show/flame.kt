@@ -1,23 +1,24 @@
 package kotlinx.coroutines.profiler.show
 
-import kotlinx.coroutines.debug.State
-import kotlinx.coroutines.profiler.sampling.ProfilingCoroutineInfo
+import kotlinx.coroutines.profiler.core.data.CoroutinesStructure
+import kotlinx.coroutines.profiler.core.data.State
+import kotlinx.coroutines.profiler.core.data.StructuredProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.show.CoroutineStatesRange.Companion.splitByStates
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.coroutines.profiler.show.serialization.buildCoroutineProbeFrame
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-fun List<ProfilingCoroutineInfo>.toProbeFrame(): CoroutineProbeFrame {
+fun CoroutinesStructure.toProbeFrame(): CoroutineProbeFrame {
     val root = buildCoroutineProbeFrame {
         name = "root"
 
-        val probesTotally = maxOf { it.probes.last().probeId }.toInt()
+        val probesTotally = structure.maxOf { it.probes.last().probeId }.toInt()
 
         value = probesTotally
 
-        this@toProbeFrame.forEach { rootCoroutine ->
+        structure.forEach { rootCoroutine ->
             addChildren {
-                val list = rootCoroutine.toProbeFrames(1.0 / size, 0..probesTotally)
+                val list = rootCoroutine.toProbeFrames(1.0 / structure.size, 0..probesTotally)
                 list
             }
         }
@@ -26,7 +27,7 @@ fun List<ProfilingCoroutineInfo>.toProbeFrame(): CoroutineProbeFrame {
 }
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-private fun ProfilingCoroutineInfo.toProbeFrames(
+private fun StructuredProfilingCoroutineInfo.toProbeFrames(
     parentCompensationCoefficient: Double,
     parentDumpsIds: IntRange
 ): List<CoroutineProbeFrame> {
@@ -78,18 +79,18 @@ internal class CoroutineStatesRange private constructor(
     val probesRange get() = fromProbeId..toProbeId
 
     companion object {
-        internal fun ProfilingCoroutineInfo.splitByStates(): List<CoroutineStatesRange> {
+        internal fun StructuredProfilingCoroutineInfo.splitByStates(): List<CoroutineStatesRange> {
             val split = mutableListOf<CoroutineStatesRange>()
 
             probes.forEach {
                 val last = split.lastOrNull()
-                if (it.state == last?.state && it.currentThreadName == last.thread && it.lastUpdatedStackTrace == last.lastStackTrace) {
+                if (it.state == last?.state && it.lastUpdatedThreadName == last.thread && it.lastUpdatedStackTrace == last.lastStackTrace) {
                     split[split.lastIndex]._toProbeId = it.probeId
                 } else {
                     split.add(
                         CoroutineStatesRange(
                             it.state,
-                            it.currentThreadName,
+                            it.lastUpdatedThreadName,
                             it.lastUpdatedStackTrace,
                             it.probeId,
                             it.probeId
