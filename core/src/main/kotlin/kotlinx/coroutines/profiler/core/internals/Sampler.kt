@@ -8,7 +8,6 @@ import kotlinx.coroutines.debug.State
 import kotlinx.coroutines.profiler.core.data.CoroutineProbe
 import kotlinx.coroutines.profiler.core.data.CoroutinesDump
 import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
-import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfoImpl
 import kotlinx.coroutines.profiler.core.data.statistics.ProbeHandlingStatistics
 import kotlinx.coroutines.profiler.core.data.statistics.ProbeTakingStatistics
 
@@ -76,7 +75,7 @@ data class CoroutinesInfoDump(
 
 @ExperimentalCoroutinesApi
 private fun CoroutineInfo.toProfilingCoroutineInfo(withDump: CoroutinesInfoDump): ProfilingCoroutineInfo =
-    ProfilingCoroutineInfoImpl(
+    ProfilingCoroutineInfo(
         id,
         job?.let { it::class.simpleName } ?: "unknown",
         findParent(withDump)?.id,

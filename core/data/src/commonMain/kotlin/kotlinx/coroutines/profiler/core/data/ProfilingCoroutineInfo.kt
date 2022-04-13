@@ -1,88 +1,90 @@
 package kotlinx.coroutines.profiler.core.data
 
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Transient
+
 
 @kotlinx.serialization.Serializable
-sealed class ProfilingCoroutineInfo {
+open class ProfilingCoroutineInfo(
     @SerialName("id")
-    abstract val id: Long
-
+    open val id: Long,
     @SerialName("name")
-    abstract val name: String
-
+    open val name: String,
     @SerialName("parentId")
-    abstract val parentId: Long?
-
+    open val parentId: Long?,
     @SerialName("creationStackTrace")
-    abstract val creationStackTrace: List<String>
-}
+    open val creationStackTrace: List<String>,
 
-interface WithProbes {
+    @Transient
+    protected val _probes: MutableList<CoroutineProbe> = mutableListOf()
+) {
+
     val probes: List<CoroutineProbe>
-}
-
-interface Structured {
-    val children: List<Structured>
-
-    fun walk(action: (Structured) -> Unit)
-    operator fun get(coroutineId: Long): Structured?
-}
+        get() = _probes
 
 
-@kotlinx.serialization.Serializable
-open class ProfilingCoroutineInfoImpl(
-    override val id: Long,
-    override val name: String,
-    override val parentId: Long?,
-    override val creationStackTrace: List<String>
-) : ProfilingCoroutineInfo() {
+    fun setProbes(probes: List<CoroutineProbe>): ProfilingCoroutineInfo =
+        this.apply {
+            _probes.clear()
+            _probes.addAll(probes)
+        }
 
-    fun withProbes(probes: List<CoroutineProbe>): ProfilingCoroutineInfoImplWithProbes = ProfilingCoroutineInfoImplWithProbes(
-        id, name, parentId, creationStackTrace, probes.filter { it.coroutineId == id }
-    )
-
-    fun toStructured(children: List<ProfilingCoroutineInfoImpl> = emptyList()): StructuredProfilingCoroutineInfo = StructuredProfilingCoroutineInfo(
-        id, name, parentId, creationStackTrace,
-        children.map { StructuredProfilingCoroutineInfo(it.id, it.name, it.parentId, it.creationStackTrace, emptyList()) }
-    )
-
-}
-
-class ProfilingCoroutineInfoImplWithProbes(
-    override val id: Long,
-    override val name: String,
-    override val parentId: Long?,
-    override val creationStackTrace: List<String>,
-    override val probes: List<CoroutineProbe>
-) : ProfilingCoroutineInfoImpl(id, name, parentId, creationStackTrace), WithProbes {
-
-    fun toStructured(children: List<ProfilingCoroutineInfoImplWithProbes> = emptyList()): StructuredProfilingCoroutineInfoWithProbes =
-        StructuredProfilingCoroutineInfoWithProbes(
+    open fun toStructured(children: List<ProfilingCoroutineInfo> = emptyList()): StructuredProfilingCoroutineInfo =
+        StructuredProfilingCoroutineInfo(
             id, name, parentId, creationStackTrace,
             children.map {
-                StructuredProfilingCoroutineInfoWithProbes(
-                    it.id, it.name, it.parentId, it.creationStackTrace, emptyList(), it.probes
-                )
-            },
-            probes
+                it.toStructured(emptyList())
+//                StructuredProfilingCoroutineInfo(
+//                    it.id,
+//                    it.name,
+//                    it.parentId,
+//                    it.creationStackTrace,
+//                    emptyList(),
+//                    it._probes
+//                )
+            }, _probes
         )
+
+    override fun toString(): String {
+        return "Coroutine(id=${id}, parent:${parentId})"
+    }
 }
+
+//class ProfilingCoroutineInfoWithProbes(
+//    id: Long,
+//    name: String,
+//    parentId: Long?,
+//    creationStackTrace: List<String>,
+//    override val probes: List<CoroutineProbe>
+//) : ProfilingCoroutineInfo(id, name, parentId, creationStackTrace), WithProbes {
+//
+//    fun toStructured(children: List<ProfilingCoroutineInfoWithProbes> = emptyList()): StructuredProfilingCoroutineInfoWithProbes =
+//        StructuredProfilingCoroutineInfoWithProbes(
+//            id, name, parentId, creationStackTrace,
+//            children.map {
+//                StructuredProfilingCoroutineInfoWithProbes(
+//                    it.id, it.name, it.parentId, it.creationStackTrace, emptyList(), it.probes
+//                )
+//            },
+//            probes
+//        )
+//}
 
 
 open class StructuredProfilingCoroutineInfo(
-    override val id: Long,
-    override val name: String,
-    override val parentId: Long?,
-    override val creationStackTrace: List<String>,
-    children: List<StructuredProfilingCoroutineInfo>
-) : ProfilingCoroutineInfo(), Structured {
+    id: Long,
+    name: String,
+    parentId: Long?,
+    creationStackTrace: List<String>,
+    _children: List<StructuredProfilingCoroutineInfo>,
+    _probes: List<CoroutineProbe> = emptyList()
+) : ProfilingCoroutineInfo(id, name, parentId, creationStackTrace, _probes.toMutableList()) {
 
-    private var _children: MutableList<StructuredProfilingCoroutineInfo> = children.toMutableList()
-    override val children: List<StructuredProfilingCoroutineInfo>
+    private val _children: MutableList<StructuredProfilingCoroutineInfo> = _children.toMutableList()
+    val children: List<StructuredProfilingCoroutineInfo>
         get() = _children
 
-
-    override operator fun get(coroutineId: Long): StructuredProfilingCoroutineInfo? = find { it.id == coroutineId }
+    operator fun get(coroutineId: Long): StructuredProfilingCoroutineInfo? = find { it.id == coroutineId }
 
     fun find(condition: (StructuredProfilingCoroutineInfo) -> Boolean): StructuredProfilingCoroutineInfo? {
         if (condition(this)) return this
@@ -94,7 +96,7 @@ open class StructuredProfilingCoroutineInfo(
         return null
     }
 
-    override fun walk(action: (Structured) -> Unit) {
+    fun walk(action: (StructuredProfilingCoroutineInfo) -> Unit) {
         action(this)
 
         children.forEach { child ->
@@ -102,12 +104,23 @@ open class StructuredProfilingCoroutineInfo(
         }
     }
 
+    fun addProbes(
+        probes: List<CoroutineProbe>
+    ): StructuredProfilingCoroutineInfo {
+        probes.forEach { probe ->
+            this.find {
+                probe.coroutineId == it.id
+            }!!._probes.add(probe)
+        }
+        return this
+    }
+
     companion object {
-        fun toStructured(infos: List<ProfilingCoroutineInfoImpl>): List<StructuredProfilingCoroutineInfo> {
+        fun LinearCoroutinesStructure.toStructured(): CoroutinesStructure {
             val rootCoroutines = mutableListOf<StructuredProfilingCoroutineInfo>()
             val coroutineById = mutableMapOf<Long, StructuredProfilingCoroutineInfo>()
 
-            infos.forEach { coroutine ->
+            this.coroutines.forEach { coroutine ->
                 val structuredCoroutine = coroutine.toStructured()
                 val parent = coroutineById[structuredCoroutine.parentId]
 
@@ -117,141 +130,103 @@ open class StructuredProfilingCoroutineInfo(
                     parent._children.add(structuredCoroutine)
                 }
 
-                coroutineById[coroutine.id] = structuredCoroutine
+                coroutineById[structuredCoroutine.id] = structuredCoroutine
             }
-            return rootCoroutines
+            return CoroutinesStructure(rootCoroutines)
         }
-    }
 
-
-
-
-    fun withProbes(probes: List<CoroutineProbe>): StructuredProfilingCoroutineInfoWithProbes {
-        return StructuredProfilingCoroutineInfoWithProbes.fromStructuredCoroutineInfo(this, probes)
-    }
-
-}
-
-
-class StructuredProfilingCoroutineInfoWithProbes(
-    override val id: Long,
-    override val name: String,
-    override val parentId: Long?,
-    override val creationStackTrace: List<String>,
-    children: List<StructuredProfilingCoroutineInfoWithProbes>,
-    probes: List<CoroutineProbe>
-) : StructuredProfilingCoroutineInfo(id, name, parentId, creationStackTrace, children),
-    Structured,
-    WithProbes
-{
-
-    override fun get(coroutineId: Long): StructuredProfilingCoroutineInfoWithProbes? = super.get(coroutineId) as? StructuredProfilingCoroutineInfoWithProbes
-
-    private var _children: MutableList<StructuredProfilingCoroutineInfoWithProbes> = children.toMutableList()
-    override val children: List<StructuredProfilingCoroutineInfoWithProbes>
-        get() = _children
-
-    private var _probes: MutableList<CoroutineProbe> = probes.toMutableList()
-    override val probes: List<CoroutineProbe>
-        get() = _probes
-
-
-    companion object {
-        fun fromStructuredCoroutineInfo(info: StructuredProfilingCoroutineInfo, probes: List<CoroutineProbe>): StructuredProfilingCoroutineInfoWithProbes {
-            val infoWithProbes = info.toWithProbes()
-
+        fun CoroutinesStructure.addProbes(
+            probes: List<CoroutineProbe>
+        ): CoroutinesStructure {
             probes.forEach { probe ->
-                infoWithProbes[probe.coroutineId]!!._probes.add(probe)
+                this.find {
+                    probe.coroutineId == it.id
+                }!!._probes.add(probe)
             }
-            return infoWithProbes
+            return this
         }
+
     }
+
+
+    override fun toString(): String {
+        return "Coroutine(id=${id}, parent:${parentId}, children=${children})"
+    }
+
 }
 
 
-private fun StructuredProfilingCoroutineInfo.toWithProbes(): StructuredProfilingCoroutineInfoWithProbes = StructuredProfilingCoroutineInfoWithProbes(
-    id, name, parentId, creationStackTrace, children.map { it.toWithProbes() }, emptyList()
-)
-
-
-
-//
-//@kotlinx.serialization.Serializable
-//class ProfilingCoroutineInfo internal constructor(
-//    val id: Long,
-//    val parentId: Long?,
-//    val creationStackTrace: List<String>,
-//    val name: String? = "unknown"
-//) {
-//
-//    @Transient
-//    private val _probes = mutableListOf<CoroutineProbe>()
-//
-//    @Transient
-//    val probes: List<CoroutineProbe> = _probes
-//
-//    @Transient
-//    private val _children = mutableListOf<ProfilingCoroutineInfo>()
-//
-//    @Transient
-//    val children: List<ProfilingCoroutineInfo> = _children
-//
-//    private fun addChild(childCoroutine: ProfilingCoroutineInfo) {
-//        _children.add(childCoroutine)
-//    }
-//
-//    private fun addProbe(probe: CoroutineProbe) {
-//        _probes.add(probe)
-//    }
-//
-//    fun walk(action: (ProfilingCoroutineInfo) -> Unit) {
-//        action(this)
-//        children.forEach {
-//            it.walk(action)
-//        }
-//    }
+//class StructuredProfilingCoroutineInfoWithProbes(
+//    id: Long,
+//    name: String,
+//    parentId: Long?,
+//    creationStackTrace: List<String>,
+//    children: List<StructuredProfilingCoroutineInfoWithProbes>,
+//    probes: List<CoroutineProbe>
+//) : StructuredProfilingCoroutineInfo(id, name, parentId, creationStackTrace, children),
+//    Structured,
+//    WithProbes {
 //
 //
-//    private fun asString(indent: Int = 0, indentWide: Int = 2): String = buildString {
-//        if (indent > 0) {
-//            append((" ".repeat(indentWide + 2) + "│").repeat(indent / indentWide - 1))
-//            append((" ".repeat(indentWide + 2) + "├"))
-//            append("─".repeat(indentWide) + " ")
+//    private var _children: MutableList<StructuredProfilingCoroutineInfoWithProbes> = children.toMutableList()
+//    override val children: List<StructuredProfilingCoroutineInfoWithProbes>
+//        get() = _children
+//
+//    private var _probes: MutableList<CoroutineProbe> = probes.toMutableList()
+//    override val probes: List<CoroutineProbe>
+//        get() = _probes
+//
+//
+//
+//    fun findWithProbes(condition: (StructuredProfilingCoroutineInfoWithProbes) -> Boolean): StructuredProfilingCoroutineInfoWithProbes? {
+//        if (condition(this)) return this
+//
+//        children.forEach { child ->
+//            child.findWithProbes(condition)?.let { return it }
 //        }
 //
-//        appendLine("Coroutine(id: ${id}, parent: ${parentId})")
-//
-//        children.forEach {
-//            append(it.asString(indent + indentWide))
-//        }
+//        return null
 //    }
 //
-//    override fun toString(): String = asString(0)
+//    override operator fun get(coroutineId: Long): StructuredProfilingCoroutineInfoWithProbes? = this.findWithProbes { it.id == coroutineId }
+//
 //
 //    companion object {
-//        fun Probes.bindWithInfos(
-//            coroutines: CoroutinesStructure,
-//        ): List<ProfilingCoroutineInfo> {
-//            val rootCoroutines = mutableListOf<ProfilingCoroutineInfo>()
-//            val coroutineById = mutableMapOf<Long, ProfilingCoroutineInfo>()
+////        fun StructuredProfilingCoroutineInfofromStructuredCoroutineInfo(
+////            info: StructuredProfilingCoroutineInfo,
+////            probes: List<CoroutineProbe>
+////        ): StructuredProfilingCoroutineInfoWithProbes {
+////            val infoWithProbes = info.toWithProbes()
+////
+////            probes.forEach { probe ->
+////                infoWithProbes[probe.coroutineId]!!._probes.add(probe)
+////            }
+////            return infoWithProbes
+////        }
 //
-//            coroutines.structure.forEach { coroutine ->
-//                val parent = coroutineById[coroutine.parentId]
-//
-//                if (parent == null) {
-//                    rootCoroutines.add(coroutine)
-//                } else {
-//                    parent.addChild(coroutine)
-//                }
-//
-//                coroutineById[coroutine.id] = coroutine
-//            }
-//
-//            probes.forEach { probe ->
-//                coroutineById[probe.coroutineId]!!.addProbe(probe)
-//            }
-//
-//            return rootCoroutines
-//        }
+////        fun CoroutinesStructure.addProbes(
+//////            infos: List<StructuredProfilingCoroutineInfo>,
+////            probes: List<CoroutineProbe>
+////        ): CoroutinesStructure {
+////
+//////            val infosWithProbes = this.structure.map { it.toWithProbes() }
+////
+////            probes.forEach { probe ->
+////
+////                this.structure.findInfo { probe.coroutineId == it.id }!!._probes.add(probe).also {
+//////                    println("Add probe: ${probe} to info: ${infosWithProbes.find { it[probe.coroutineId] != null }}")
+////                }
+////            }
+////            return infosWithProbes
+////        }
 //    }
 //}
+
+
+fun CoroutinesStructure.find(condition: (StructuredProfilingCoroutineInfo) -> Boolean): StructuredProfilingCoroutineInfo? {
+
+    structure.forEach { info ->
+        info.find(condition)?.let { return it }
+    }
+    return null
+}

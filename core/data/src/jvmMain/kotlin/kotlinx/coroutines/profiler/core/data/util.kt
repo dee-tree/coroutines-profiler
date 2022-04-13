@@ -11,7 +11,7 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import java.util.zip.GZIPInputStream
 
-fun ProfilingResultFile.readFromFile(file: File) = ProfilingResultFile.fromString(file.readText())
+fun readProfilingResultsFile(file: File) = ProfilingResultFile.fromString(file.readText())
 
 fun ProfilingResultFile.writeToFile(file: File) {
     file.writeText(Json.encodeToString(this))
@@ -23,23 +23,23 @@ val ProfilingResultFile.structureFile: File
 val ProfilingResultFile.probesFile: File
     get() = File(probesFilePath)
 
-fun ProfilingResultFile.loadStructure(): CoroutinesStructure =
+fun ProfilingResultFile.loadStructure(): LinearCoroutinesStructure =
     readCoroutinesStructureFromStream(GZIPInputStream(structureFile.inputStream()))
 
 fun ProfilingResultFile.loadProbes(): Probes =
-    readProbesFromStream(GZIPInputStream(structureFile.inputStream()))
+    readProbesFromStream(GZIPInputStream(probesFile.inputStream()))
 
 
 /**
  * Remember that coroutines structure is stored in GZIP'ed protobuf format
  */
 @ExperimentalSerializationApi
-internal fun readCoroutinesStructureFromStream(input: InputStream): CoroutinesStructure =
-    CoroutinesStructure(buildList {
+internal fun readCoroutinesStructureFromStream(input: InputStream): LinearCoroutinesStructure =
+    LinearCoroutinesStructure(buildList {
         while (input.available() != 0) {
             val coroutineInfoSize = input.readNBytes(Int.SIZE_BYTES).toInt()
-            val sample = ProtoBuf.decodeFromByteArray<ProfilingCoroutineInfo>(input.readNBytes(coroutineInfoSize))
-            add(sample)
+            val coroutineInfo = ProtoBuf.decodeFromByteArray<ProfilingCoroutineInfo>(input.readNBytes(coroutineInfoSize))
+            add(coroutineInfo)
         }
     })
 
@@ -49,9 +49,9 @@ internal fun readCoroutinesStructureFromStream(input: InputStream): CoroutinesSt
 @ExperimentalSerializationApi
 internal fun readProbesFromStream(input: InputStream): Probes = Probes(buildList {
     while (input.available() != 0) {
-        val sampleSize = input.readNBytes(Int.SIZE_BYTES).toInt()
-        val sample = ProtoBuf.decodeFromByteArray<CoroutineProbe>(input.readNBytes(sampleSize))
-        add(sample)
+        val probeSize = input.readNBytes(Int.SIZE_BYTES).toInt()
+        val probe = ProtoBuf.decodeFromByteArray<CoroutineProbe>(input.readNBytes(probeSize))
+        add(probe)
     }
 })
 
