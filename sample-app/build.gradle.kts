@@ -10,10 +10,6 @@ group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    flatDir {
-        dirs(File(rootDir, "libs").absolutePath)
-    }
-
     mavenCentral()
 }
 
@@ -28,7 +24,7 @@ tasks.test {
 
     jvmArgs(
         "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
-        "-javaagent:${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar",
+        "-javaagent:${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar",
     )
 }
 
@@ -47,13 +43,12 @@ file("settings.properties").inputStream().let { props.load(it) }
 
 
 tasks.create<JavaExec>("runWithProfiler") {
-    dependsOn(":sampling:fatJar")
+    dependsOn(":core:fatJar")
     classpath(sourceSets["main"].runtimeClasspath)
     mainClass.set(mainClassQualifiedName)
 
-//    val args = ""
     val args = "-o \"out/results/profile\" -i 4 -s "
-    val agentPath = "${rootProject.childProjects["sampling"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar"
+    val agentPath = "${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}profiler.jar"
 
     jvmArgs(
         "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
@@ -77,4 +72,4 @@ tasks.jar {
     from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
 
-tasks["test"].dependsOn(":sampling:fatJar")
+tasks["test"].dependsOn(":core:fatJar")
