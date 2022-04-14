@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
 import kotlinx.coroutines.profiler.show.ui.CoroutineSuspensionsFlameGraph
 import kotlinx.coroutines.profiler.show.ui.CoroutinesFlameGraph
+import kotlinx.coroutines.profiler.show.ui.SuspensionsFlameGraph
 import react.*
 import react.css.css
 import react.dom.html.ReactHTML.a
@@ -28,6 +29,9 @@ val App = FC<Props> {
     useEffectOnce {
         scope.launch {
             profilingInfo = api.getProfilingStatistics()
+
+            render(SuspensionsFlameGraph.create() {
+            }, document.getElementById("suspensionsFlameGraphContainer")!!)
         }
     }
 
@@ -151,7 +155,7 @@ val App = FC<Props> {
 
                     render(CoroutineSuspensionsFlameGraph.create() {
                         this.coroutineId = it.coroutineId
-                    }, document.getElementById("suspensionsFlameContainer")!!)
+                    }, document.getElementById("coroutineSuspensionsFlameGraphContainer")!!)
                 }
 
             }
@@ -162,7 +166,12 @@ val App = FC<Props> {
         }
 
         div {
-            id = "suspensionsFlameContainer"
+            id = "suspensionsFlameGraphContainer"
+        }
+
+
+        div {
+            id = "coroutineSuspensionsFlameGraphContainer"
         }
     }
 

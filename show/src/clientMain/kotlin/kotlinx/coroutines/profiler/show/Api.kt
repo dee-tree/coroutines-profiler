@@ -26,4 +26,9 @@ class Api(private val client: HttpClient) {
             parameter("id", coroutineId)
         }
     }
+
+    suspend fun getSuspensionsStackTrace(): CoroutineSuspensionsFrame {
+        println("Intended to request suspensions stack trace for coroutine")
+        return client.get<CoroutineSuspensionsFrame>("${endpoint}/suspensionsStackTrace")
+    }
 }

@@ -16,27 +16,28 @@ import react.dom.html.ReactHTML.div
 import react.useEffectOnce
 
 private val scope = MainScope()
-val CoroutineSuspensionsFlameGraph = FC<CoroutineSuspensionsFlameGraphProps> { props ->
+val SuspensionsFlameGraph = FC<SuspensionsFlameGraphProps> { props ->
 
     val flamegraph = flamegraph()
-        .title("Coroutine #${props.coroutineId} suspensions")
+        .title("Suspensions flame graph")
+        .setColorHue("red")
 
     useEffectOnce {
         scope.launch {
-            val root = api.getSuspensionsStackTrace(props.coroutineId)
-            select("#coroSuspensionsFlame").datum(Json.encodeToDynamic(root.asJsonValuedElement()) as Object)
+            val root = api.getSuspensionsStackTrace()
+            select("#suspensionsFlame").datum(Json.encodeToDynamic(root.asJsonValuedElement()) as Object)
                 .call(flamegraph)
         }
     }
 
 
     div {
-        id = "coroSuspensionsFlame"
+        id = "suspensionsFlame"
     }
 }
 
-external interface CoroutineSuspensionsFlameGraphProps : Props {
-    var coroutineId: Long
+
+external interface SuspensionsFlameGraphProps : Props {
     var onFrameClicked: (CoroutineSuspensionsFrame) -> Unit
     var onExit: () -> Unit
 }

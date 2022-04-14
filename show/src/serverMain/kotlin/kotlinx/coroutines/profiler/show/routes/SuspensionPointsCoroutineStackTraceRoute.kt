@@ -30,4 +30,21 @@ fun Route.suspensionPointsCoroutineStackTraceRoute() {
         call.respond(selectedCoroutine.toCoroutineSuspensionsFrame())
 
     }
+
+    get("/suspensionsStackTrace") {
+        println("Requested suspensions stack trace!")
+
+        if (!ProfilingStorage.isCoroutinesProbesInitialized()) {
+            call.respond(HttpStatusCode.BadRequest, "Profiling probes are not initialized!")
+            return@get
+        }
+        if (!ProfilingStorage.isLinearCoroutinesStructureInitialized()) {
+            call.respond(HttpStatusCode.BadRequest, "Coroutines structure is not initialized!")
+            return@get
+        }
+
+        call.respond(ProfilingStorage.linearCoroutinesStructure.toCoroutineSuspensionsFrame())
+
+    }
+
 }

@@ -14,7 +14,21 @@ import kotlin.jvm.JvmInline
 @JvmInline
 value class CoroutinesStructure(
     val structure: List<StructuredProfilingCoroutineInfo>
-)
+) {
+    fun find(condition: (StructuredProfilingCoroutineInfo) -> Boolean): StructuredProfilingCoroutineInfo? {
+        structure.forEach { info ->
+            info.find(condition)?.let { return it }
+        }
+        return null
+    }
+
+    fun walk(action: (StructuredProfilingCoroutineInfo) -> Unit) {
+        structure.forEach { info ->
+            info.walk(action)
+        }
+    }
+
+}
 
 /*
 
