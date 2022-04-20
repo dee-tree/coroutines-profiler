@@ -51,6 +51,9 @@ class CoroutinesFlameGraph {
             scope.launch {
                 select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flameGraph)
 
+                props.selectedCoroutineId?.let {
+                    flameGraph.search(it.toString())
+                }
             }
         }
 
@@ -67,11 +70,10 @@ class CoroutinesFlameGraph {
     fun clear() {
         flameGraph.clear()
     }
-
 }
 
 external interface CoroutinesFlameGraphProps : Props {
-
+    var selectedCoroutineId: Long?
     var onFrameClicked: (CoroutineProbeFrame) -> Unit
     var onExit: () -> Unit
 }

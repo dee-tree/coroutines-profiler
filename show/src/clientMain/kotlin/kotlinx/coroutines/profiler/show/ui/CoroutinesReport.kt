@@ -45,6 +45,7 @@ val CoroutinesReport = FC<CoroutinesReportProps> { props ->
             CoroutineReport() {
                 this.coroutineId = coroutineId
                 onFocus = {
+                    println("Focused coro ${it}")
                     props.onCoroutineFocus(it)
                 }
             }

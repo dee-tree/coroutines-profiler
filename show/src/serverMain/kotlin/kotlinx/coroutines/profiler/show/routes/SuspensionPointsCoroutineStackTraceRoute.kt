@@ -9,13 +9,12 @@ import kotlinx.coroutines.profiler.show.storage.ProfilingStorage
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.initializeCoroutinesIfNot
 
 fun Route.suspensionPointsCoroutineStackTraceRoute() {
-    get("/suspensionsStackTrace{id}") {
-        println("Requested suspensions stack trace!")
+    get("/suspensionsStackTrace/{id}") {
 
         val id = call.parameters["id"]?.toLong() ?: run {
             call.respond(HttpStatusCode.BadRequest, "Coroutine id is invalid!")
         }
-        println("coroutine #${id}")
+        println("Requested suspensions stack trace for coroutine #${id}")
 
         initializeCoroutinesIfNot()
 
