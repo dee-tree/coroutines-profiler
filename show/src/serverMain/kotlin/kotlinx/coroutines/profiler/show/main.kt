@@ -26,7 +26,8 @@ fun main(args: Array<String>) {
             staticRoute()
             profilingStatisticsRoute()
             stacksRoute()
-            coroutineRoute()
+            allCoroutinesIdsRoute()
+            coroutineReportRoute()
             suspensionPointsCoroutineStackTraceRoute()
         }
     }.start(wait = true)

@@ -44,6 +44,7 @@ external interface FlameGraph {
     fun setColorHue(param_val: String): FlameGraph
     fun setColorHue(): FlameGraph
     fun setSearchMatch(): FlameGraph
+    fun setSearchMatch(search: (d: Any, term: String) -> Boolean): FlameGraph
     fun search(term: String)
     fun clear()
     fun destroy()

@@ -3,9 +3,11 @@
 package kotlinx.coroutines.profiler.show.storage
 
 
-import kotlinx.coroutines.profiler.core.data.LinearCoroutinesStructure
-import kotlinx.coroutines.profiler.core.data.Probes
-import kotlinx.coroutines.profiler.core.data.ProfilingResultFile
+import io.ktor.application.*
+import io.ktor.util.pipeline.*
+import kotlinx.coroutines.profiler.core.data.*
+import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo.Companion.addProbes
+import kotlinx.coroutines.profiler.show.routes.checkProfilingResultsFileExists
 import java.io.File
 
 
@@ -55,5 +57,23 @@ object ProfilingStorage {
         get() = _profilingResultFile!!
 
 
+    suspend fun PipelineContext<Unit, ApplicationCall>.initializeProfilingResultsIfNot() {
+        if (_profilingResults != null) return
+
+        checkProfilingResultsFileExists()
+        setProfilingResults(readProfilingResultsFile(profilingResultFile))
+    }
+
+    suspend fun PipelineContext<Unit, ApplicationCall>.initializeCoroutinesIfNot() {
+        if (_linearCoroutinesStructure != null) return
+        if (_coroutinesProbes != null) return
+
+        initializeProfilingResultsIfNot()
+
+        setCoroutinesProbes(profilingResults.loadProbes())
+        setLinearCoroutinesStructure(
+            profilingResults.loadStructure().addProbes(coroutinesProbes.probes)
+        )
+    }
 }
 

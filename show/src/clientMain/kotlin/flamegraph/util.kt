@@ -8,15 +8,27 @@ const val RUNNING_COLOR = "#70ff66"
 const val SUSPENDED_COLOR = "#FF6666"
 const val DEFAULT_COLOR = "#AAAAAA"
 
+const val ALPHA_CREATED_COLOR = "#FFB266A0"
+const val ALPHA_RUNNING_COLOR = "#70ff66A0"
+const val ALPHA_SUSPENDED_COLOR = "#FF6666A0"
 
-fun coroutineStateColorMapper(d: Any, originalColor: String): String {// d, originalColor ->
+
+fun coroutineStateColorMapper(d: Any, originalColor: String): String {
     val d = d.asJsObject().valueOf()
 
-    return if (d.highlight) HIGHLIGHTED_COLOR else when (d.data.state) {
-        "CREATED" -> CREATED_COLOR
-        "RUNNING" -> RUNNING_COLOR
-        "SUSPENDED" -> SUSPENDED_COLOR
-        else -> DEFAULT_COLOR
+    return when (d.highlight) {
+        true -> when (d.data.state) {
+            "CREATED" -> CREATED_COLOR
+            "RUNNING" -> RUNNING_COLOR
+            "SUSPENDED" -> SUSPENDED_COLOR
+            else -> DEFAULT_COLOR
+        }
+        else -> when (d.data.state) {
+            "CREATED" -> ALPHA_CREATED_COLOR
+            "RUNNING" -> ALPHA_RUNNING_COLOR
+            "SUSPENDED" -> ALPHA_SUSPENDED_COLOR
+            else -> DEFAULT_COLOR
+        }
     }
 }
 
@@ -28,4 +40,9 @@ fun coroutineFrameLabel(d: Any): String {
             "probes: " + d.data.probesCount + "\n" +
             "state: " + d.data.state + "\n" +
             if (d.data.state == "RUNNING") "thread: ${d.data.thread}\n" else ""
+}
+
+fun coroutineIdSearchMatch(d: Any, id: Long): Boolean {
+    val d = d.asJsObject().valueOf()
+    return d.data.id == id
 }

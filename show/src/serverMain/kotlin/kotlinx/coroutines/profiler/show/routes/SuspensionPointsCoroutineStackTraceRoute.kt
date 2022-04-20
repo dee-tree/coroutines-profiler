@@ -6,6 +6,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.profiler.show.serialization.CoroutineSuspensionsFrame.Companion.toCoroutineSuspensionsFrame
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage
+import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.initializeCoroutinesIfNot
 
 fun Route.suspensionPointsCoroutineStackTraceRoute() {
     get("/suspensionsStackTrace{id}") {
@@ -16,14 +17,7 @@ fun Route.suspensionPointsCoroutineStackTraceRoute() {
         }
         println("coroutine #${id}")
 
-        if (!ProfilingStorage.isCoroutinesProbesInitialized()) {
-            call.respond(HttpStatusCode.BadRequest, "Profiling probes are not initialized!")
-            return@get
-        }
-        if (!ProfilingStorage.isLinearCoroutinesStructureInitialized()) {
-            call.respond(HttpStatusCode.BadRequest, "Coroutines structure is not initialized!")
-            return@get
-        }
+        initializeCoroutinesIfNot()
 
         val selectedCoroutine = ProfilingStorage.linearCoroutinesStructure.coroutines.find { it.id == id }!!
 
@@ -34,17 +28,9 @@ fun Route.suspensionPointsCoroutineStackTraceRoute() {
     get("/suspensionsStackTrace") {
         println("Requested suspensions stack trace!")
 
-        if (!ProfilingStorage.isCoroutinesProbesInitialized()) {
-            call.respond(HttpStatusCode.BadRequest, "Profiling probes are not initialized!")
-            return@get
-        }
-        if (!ProfilingStorage.isLinearCoroutinesStructureInitialized()) {
-            call.respond(HttpStatusCode.BadRequest, "Coroutines structure is not initialized!")
-            return@get
-        }
+        initializeCoroutinesIfNot()
 
         call.respond(ProfilingStorage.linearCoroutinesStructure.toCoroutineSuspensionsFrame())
-
     }
 
 }

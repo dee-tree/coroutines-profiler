@@ -3,9 +3,7 @@ import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
-import kotlinx.coroutines.profiler.show.ui.CoroutineSuspensionsFlameGraph
-import kotlinx.coroutines.profiler.show.ui.CoroutinesFlameGraph
-import kotlinx.coroutines.profiler.show.ui.SuspensionsFlameGraph
+import kotlinx.coroutines.profiler.show.ui.*
 import react.*
 import react.css.css
 import react.dom.html.ReactHTML.a
@@ -25,6 +23,8 @@ private val scope = MainScope()
 
 val App = FC<Props> {
     var profilingInfo by useState(ProfilingStatistics(0, 0, 0))
+
+    lateinit var coroutinesFlameGraph: CoroutinesFlameGraph
 
     useEffectOnce {
         scope.launch {
@@ -147,32 +147,35 @@ val App = FC<Props> {
 
         }
 
-        CoroutinesFlameGraph() {
+        div {
+            id = "coroutinesReportContainer"
+        }
 
+        CoroutinesReport() {
+            onCoroutineFocus = { focusedCoroutine ->
+                coroutinesFlameGraph.search(focusedCoroutine.id)
+            }
+            onCoroutineLoseFocus = {
+                coroutinesFlameGraph.clear()
+            }
+        }
+
+        coroutinesFlameGraph = CoroutinesFlameGraph()
+
+        coroutinesFlameGraph.fc {
             onFrameClicked = {
                 scope.launch {
                     println("Selected coroutine ${it.coroutineId}")
-
-                    render(CoroutineSuspensionsFlameGraph.create() {
-                        this.coroutineId = it.coroutineId
-                    }, document.getElementById("coroutineSuspensionsFlameGraphContainer")!!)
                 }
-
             }
 
-            onExit = {
-                unmountComponentAtNode(document.getElementById("suspensionsFlameContainer")!!)
-            }
+            onExit = {}
         }
 
         div {
             id = "suspensionsFlameGraphContainer"
         }
 
-
-        div {
-            id = "coroutineSuspensionsFlameGraphContainer"
-        }
     }
 
 

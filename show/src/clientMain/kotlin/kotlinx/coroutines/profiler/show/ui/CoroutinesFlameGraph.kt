@@ -1,10 +1,7 @@
 package kotlinx.coroutines.profiler.show.ui
 
 import api
-import flamegraph.coroutineFrameLabel
-import flamegraph.coroutineStateColorMapper
-import flamegraph.flamegraph
-import flamegraph.select
+import flamegraph.*
 import kotlinext.js.Object
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -16,41 +13,61 @@ import react.Props
 import react.dom.html.ReactHTML.div
 import react.useEffectOnce
 
-private val scope = MainScope()
-val CoroutinesFlameGraph = FC<CoroutinesFlameGraphProps> { props ->
+class CoroutinesFlameGraph {
+    private val scope = MainScope()
 
-    val flamegraph = flamegraph()
-        .setColorMapper(::coroutineStateColorMapper)
-        .title("Coroutines flame graph for dump")
-        .onClick { frame ->
-            val frame = frame.asDynamic()
-            if (frame.data.name == "root") { props.onExit(); return@onClick }
-            props.onFrameClicked(
-                CoroutineProbeFrame(
-                    frame.data.name,
-                    frame.data.value,
-                    null,
-                    frame.data.id,
-                    frame.data.state,
-                    frame.data.probesCount,
-                    frame.data.stacktrace,
-                    frame.data.thread
+    private val flameGraph = flamegraph()
+
+    val fc = FC<CoroutinesFlameGraphProps> { props ->
+        flameGraph
+            .setColorMapper(::coroutineStateColorMapper)
+            .title("Coroutines states sequence")
+            .onClick { frame ->
+                val frame = frame.asDynamic()
+                if (frame.data.name == "root") {
+                    props.onExit(); return@onClick
+                }
+                props.onFrameClicked(
+                    CoroutineProbeFrame(
+                        frame.data.name,
+                        frame.data.value,
+                        null,
+                        frame.data.id,
+                        frame.data.state,
+                        frame.data.probesCount,
+                        frame.data.stacktrace,
+                        frame.data.thread
+                    )
                 )
-            )
+            }
+            .setSearchMatch { d, term ->
+                term.toLongOrNull()?.let {
+                    coroutineIdSearchMatch(d, it)
+                } ?: return@setSearchMatch false
+            }
+        flameGraph.label(::coroutineFrameLabel)
+
+        useEffectOnce {
+            scope.launch {
+                select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flameGraph)
+
+            }
         }
 
-    flamegraph.label(::coroutineFrameLabel)
 
-    useEffectOnce {
-        scope.launch {
-            select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flamegraph)
+        div {
+            id = "flame"
         }
     }
 
-
-    div {
-        id = "flame"
+    fun search(coroutineId: Long) {
+        flameGraph.search(coroutineId.toString())
     }
+
+    fun clear() {
+        flameGraph.clear()
+    }
+
 }
 
 external interface CoroutinesFlameGraphProps : Props {
