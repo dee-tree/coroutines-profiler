@@ -25,6 +25,10 @@ kotlin {
 
     js("client", IR) {
         browser {
+            commonWebpackConfig {
+                cssSupport.enabled = true
+            }
+
             binaries.executable()
         }
     }

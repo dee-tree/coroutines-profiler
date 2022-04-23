@@ -3,11 +3,7 @@ package kotlinx.coroutines.profiler.show.ui
 import csstype.*
 import io.ktor.client.features.*
 import io.ktor.client.statement.*
-import kotlinext.js.asJsObject
 import kotlinx.browser.window
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import react.CSSProperties
 import react.ChildrenBuilder
 import react.FC
 import react.Props

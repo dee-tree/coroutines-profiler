@@ -2,9 +2,12 @@ package kotlinx.coroutines.profiler.show.ui
 
 import api
 import csstype.*
+import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
+import kotlinx.dom.addClass
+import kotlinx.dom.hasClass
 import react.FC
 import react.Props
 import react.css.css
@@ -16,6 +19,10 @@ import react.useState
 private val scope = MainScope()
 
 val CoroutineReport = FC<CoroutineReportProps> { props ->
+    kotlinext.js.require("./shadows.css")
+
+    val thisElementId = "coroutineReport${props.coroutineId}"
+
     var coroutineInfo by useState(ProfilingCoroutineInfo(-1, "", null, emptyList()))
 
     useEffectOnce {
@@ -25,34 +32,41 @@ val CoroutineReport = FC<CoroutineReportProps> { props ->
         }
     }
 
+
     div {
-        css {
-            alignSelf = AlignSelf.flexStart
+        id = thisElementId
 
-            focus {
-                backgroundColor = Color("#9C96A8")
-            }
-
-            borderRadius = 0.5.em
-            borderStyle = LineStyle.solid
-            borderColor = Color("gray")
-
-            paddingLeft = 1.em
-            paddingRight = 2.em
-            paddingBottom = 0.25.em
-            paddingTop = 0.25.em
-            margin = 0.5.em
-            borderWidth = 1.px
+        onMouseEnter = {
+            if (!document.getElementById(thisElementId)!!.hasClass("shadowedCoroutineReportBox"))
+                document.getElementById(thisElementId)!!.addClass("shadowedCoroutineReportBox")
         }
 
-        onFocus = {
-            props.onFocus(coroutineInfo)
+
+        css {
+            borderRadius = 0.5.em
+
+            display = Display.flex
+            flexDirection = FlexDirection.row
+            justifyContent = JustifyContent.center
+            alignItems = AlignItems.center
+
+            0.5.em.let {
+                paddingLeft = it
+                paddingRight = it
+            }
+            margin = 0.5.em
+        }
+
+
+        onClick = {
+            props.onCoroutineSelected(coroutineInfo)
+            document.getElementById(thisElementId)!!.classList.add("selectedCoroutineReportBox")
         }
 
         tabIndex = 0
 
         p {
-            +"Coroutine ${coroutineInfo.name}\twith id = ${coroutineInfo.id}"
+            +"${coroutineInfo.id} | ${coroutineInfo.name}"
         }
     }
 
@@ -61,5 +75,5 @@ val CoroutineReport = FC<CoroutineReportProps> { props ->
 
 external interface CoroutineReportProps : Props {
     var coroutineId: Long
-    var onFocus: (ProfilingCoroutineInfo) -> Unit
+    var onCoroutineSelected: (ProfilingCoroutineInfo) -> Unit
 }

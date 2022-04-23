@@ -1,7 +1,4 @@
-import csstype.AlignItems
-import csstype.Display
-import csstype.FlexDirection
-import csstype.vh
+import csstype.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.show.ui.CoroutinesFlameGraph
@@ -13,14 +10,21 @@ import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h3
-import react.useState
 
 private val scope = MainScope()
 
 val App = FC<Props> {
 
-    var selectedCoroutineId: Long? by useState(null)
+    var selectedCoroutineId: Long? = null
+    val coroutinesFlameGraph by lazy { CoroutinesFlameGraph() }
+    val suspensionsFlameGraph by lazy { SuspensionsFlameGraph() }
 
+    h3 {
+        css {
+            textAlign = TextAlign.center
+        }
+        +"Coroutines profiler"
+    }
 
     div {
         id = "content"
@@ -33,12 +37,6 @@ val App = FC<Props> {
         }
 
 
-        h3 {
-            +"Coroutines profiler"
-        }
-
-        StatisticsComponent()
-
         div {
 
             css {
@@ -46,44 +44,56 @@ val App = FC<Props> {
                 flexDirection = FlexDirection.row
             }
 
-            CoroutinesReport() {
-                onCoroutineFocus = { focusedCoroutine ->
-                    selectedCoroutineId = focusedCoroutine.id
-//                coroutinesFlameGraph.search(focusedCoroutine.id)
+            div {
+                css {
+                    display = Display.flex
+                    flexDirection = FlexDirection.column
                 }
-                onCoroutineLoseFocus = {
-                    selectedCoroutineId = null
-//                coroutinesFlameGraph.clear()
-                }
-            }
 
-
-            CoroutinesFlameGraph().fc {
-                this.selectedCoroutineId = selectedCoroutineId
-                onFrameClicked = {
-                    scope.launch {
-                        println("Selected coroutine ${it.coroutineId}")
+                CoroutinesReport() {
+                    onCoroutineSelected = { focusedCoroutine ->
+                        selectedCoroutineId = focusedCoroutine.id
+                        coroutinesFlameGraph.search(focusedCoroutine.id)
+                        suspensionsFlameGraph.showCoroutine(focusedCoroutine.id)
+                    }
+                    onSelectionCleared = {
+                        selectedCoroutineId = null
+                        coroutinesFlameGraph.clear()
+                        suspensionsFlameGraph.clear()
                     }
                 }
-
-                onExit = {}
             }
 
+
+            div {
+                css {
+                    display = Display.flex
+                    flexDirection = FlexDirection.column
+
+                    alignSelf = AlignSelf.center
+                }
+
+                StatisticsComponent()
+
+
+                coroutinesFlameGraph.fc {
+                    onFrameClicked = {
+                        scope.launch {
+                            println("Selected coroutine ${it.coroutineId}")
+                        }
+                    }
+
+                    onExit = {}
+                }
+
+                suspensionsFlameGraph.fc {
+                    onExit = {}
+                    onFrameClicked = {}
+                }
+            }
+
+
         }
-
-//        div {
-//            id = "statesSequenceFlameGraph"
-//        }
-
-        SuspensionsFlameGraph().fc {
-            this.selectedCoroutineId = selectedCoroutineId
-            onExit = {}
-            onFrameClicked = {}
-        }
-
-//        div {
-//            id = "suspensionsFlameGraphContainer"
-//        }
 
     }
 

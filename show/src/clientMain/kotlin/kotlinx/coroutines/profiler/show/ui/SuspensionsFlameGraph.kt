@@ -1,8 +1,11 @@
 package kotlinx.coroutines.profiler.show.ui
 
 import api
+import csstype.Display
+import csstype.FlexDirection
 import flamegraph.flamegraph
 import flamegraph.select
+import flamegraph.suspensionsColorMapper
 import kotlinext.js.Object
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -12,9 +15,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToDynamic
 import react.FC
 import react.Props
+import react.css.css
+import react.dom.html.InputType
 import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.input
+import react.dom.html.ReactHTML.label
 import react.useEffectOnce
-
 
 
 class SuspensionsFlameGraph {
@@ -22,27 +28,68 @@ class SuspensionsFlameGraph {
 
     private val flameGraph = flamegraph()
 
+    private var selectedCoroutineId: Long? = null
+    private var showSelectedCoroutineForEntireFlame = false
+
     val fc = FC<SuspensionsFlameGraphProps> { props ->
         flameGraph
             .title("Suspensions flame graph")
-            .setColorHue("red")
-//            .setSearchMatch { d, term ->
-//                term.toLongOrNull()?.let {
-//                    coroutineIdSearchMatch(d, it)
-//                } ?: return@setSearchMatch false
-//            }
+            .setColorMapper(::suspensionsColorMapper)
+            .setSearchMatch { d, term ->
+                term.toLongOrNull()?.let {
+                    d.asDynamic().data.coroutineValues[it]
+                } ?: return@setSearchMatch false
+            }
 //        flameGraph.label(::coroutineFrameLabel)
 
         useEffectOnce {
             scope.launch {
-                val root = props.selectedCoroutineId?.let { api.getSuspensionsStackTrace(it) } ?: api.getSuspensionsStackTrace()
-                select("#suspensionsFlame").datum(Json.encodeToDynamic(root.asJsonValuedElement()) as Object)
-                    .call(flameGraph)
+                showFlameGraph()
             }
         }
 
         div {
             id = "suspensionsFlame"
+        }
+
+        div {
+            css {
+                display = Display.flex
+                flexDirection = FlexDirection.row
+            }
+
+            input {
+
+                id = "show_suspensions_for_entire_flamegraph_checkbox"
+
+                type = InputType.checkbox
+
+                onChange = {
+                    showSelectedCoroutineForEntireFlame = it.currentTarget.checked
+
+                    scope.launch {
+                        showFlameGraph()
+                    }
+                }
+
+
+            }
+
+            label {
+                htmlFor = "show_suspensions_for_entire_flamegraph_checkbox"
+                +"Show selected coroutine on entire flamegraph"
+            }
+
+        }
+
+
+    }
+
+    fun showCoroutine(id: Long) {
+        selectedCoroutineId = id
+
+        scope.launch {
+            showFlameGraph()
         }
     }
 
@@ -51,37 +98,31 @@ class SuspensionsFlameGraph {
     }
 
     fun clear() {
+        selectedCoroutineId = null
         flameGraph.clear()
     }
 
-}
 
-/*
-private val scope = MainScope()
-val SuspensionsFlameGraphx = FC<SuspensionsFlameGraphProps> { props ->
-
-    val flamegraph = flamegraph()
-        .title("Suspensions flame graph")
-        .setColorHue("red")
-
-    useEffectOnce {
-        scope.launch {
-            val root = api.getSuspensionsStackTrace()
-            select("#suspensionsFlame").datum(Json.encodeToDynamic(root.asJsonValuedElement()) as Object)
-                .call(flamegraph)
+    private suspend fun showFlameGraph() = scope.launch {
+        val root = if (selectedCoroutineId == null || showSelectedCoroutineForEntireFlame) {
+            api.getSuspensionsStackTrace()
+        } else {
+            api.getSuspensionsStackTrace(selectedCoroutineId!!)
         }
-    }
 
+        select("#suspensionsFlame").datum(Json.encodeToDynamic(root.asJsonValuedElement()) as Object)
+            .call(flameGraph)
 
-    div {
-        id = "suspensionsFlame"
+        if (selectedCoroutineId != null && showSelectedCoroutineForEntireFlame) {
+            search(selectedCoroutineId!!)
+        }
+
     }
 }
-*/
+
 
 
 external interface SuspensionsFlameGraphProps : Props {
-    var selectedCoroutineId: Long?
     var onFrameClicked: (CoroutineSuspensionsFrame) -> Unit
     var onExit: () -> Unit
 }

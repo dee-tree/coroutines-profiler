@@ -8,6 +8,9 @@ import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
 import react.FC
 import react.Props
 import react.css.css
+import react.dom.html.ReactHTML.b
+import react.dom.html.ReactHTML.base
+import react.dom.html.ReactHTML.br
 import react.dom.html.ReactHTML.details
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h4
@@ -33,6 +36,9 @@ val StatisticsComponent = FC<Props> {
         css {
             display = Display.flex
             flexDirection = FlexDirection.row
+            justifyContent = JustifyContent.center
+
+            alignSelf = AlignSelf.center
         }
 
         div {
@@ -46,8 +52,10 @@ val StatisticsComponent = FC<Props> {
             }
 
             p {
-                +"Coroutines: ${profilingStatistics.coroutinesCount}\t\t"
-                +"Probes: ${profilingStatistics.probesCount}\t\t"
+                +"Coroutines: ${profilingStatistics.coroutinesCount}"
+                br()
+                +"Probes: ${profilingStatistics.probesCount}"
+                br()
                 +"Specified probes interval: ${profilingStatistics.specifiedProbesIntervalMillis} ms"
             }
 
@@ -62,9 +70,6 @@ val StatisticsComponent = FC<Props> {
 
                 summary {
                     css {
-                        display = Display.flex
-                        alignItems = AlignItems.center
-                        justifyContent = JustifyContent.center
 
                         hover {
                             color = Color("#ff3200")
@@ -75,26 +80,69 @@ val StatisticsComponent = FC<Props> {
                         +"Internal statistics"
                     }
                 }
-                h5 {
-                    +"Probe taking"
+
+
+                div {
+                    css {
+                        display = Display.flex
+                        flexDirection = FlexDirection.row
+
+                    }
+
+
+                    div {
+
+                        css {
+                            paddingRight = 1.em
+                            paddingLeft = 1.em
+                        }
+
+                        h5 {
+                            b {
+                                +"Probe taking"
+                            }
+                        }
+                        p {
+                            +"Mean time: ${internal.probeTakingStatistics.meanTimeMillis} ms"
+                            br()
+                            +"Max time: ${internal.probeTakingStatistics.maxTimeMillis} ms"
+                            br()
+                            +"Time Q1: ${internal.probeTakingStatistics.probeTakingQ1} ms"
+                            br()
+                            +"Time Q2: ${internal.probeTakingStatistics.probeTakingQ2} ms"
+                            br()
+                            +"Time Q3: ${internal.probeTakingStatistics.probeTakingQ3} ms"
+                        }
+                    }
+
+
+                    div {
+                        css {
+                            paddingRight = 1.em
+                            paddingLeft = 1.em
+                        }
+                        h5 {
+                            b {
+                                +"Probe handling"
+                            }
+                        }
+                        p {
+                            +"Mean time: ${internal.probeHandlingStatistics.meanProbeHandlingTimeMillis} ms"
+                            br()
+                            +"Max time: ${internal.probeHandlingStatistics.maxProbeHandlingTimeMillis} ms"
+                            br()
+                            +"Time Q1: ${internal.probeHandlingStatistics.probeHandlingQ1} ms"
+                            br()
+                            +"Time Q2: ${internal.probeHandlingStatistics.probeHandlingQ2} ms"
+                            br()
+                            +"Time Q3: ${internal.probeHandlingStatistics.probeHandlingQ3} ms"
+                        }
+
+                    }
+
+
                 }
-                p {
-                    +"Mean time: ${internal.probeTakingStatistics.meanTimeMillis} ms\t\t"
-                    +"Max time: ${internal.probeTakingStatistics.maxTimeMillis} ms\t\t"
-                    +"Time Q1: ${internal.probeTakingStatistics.probeTakingQ1} ms\t\t"
-                    +"Time Q2: ${internal.probeTakingStatistics.probeTakingQ2} ms\t\t"
-                    +"Time Q3: ${internal.probeTakingStatistics.probeTakingQ3} ms\t\t"
-                }
-                h5 {
-                    +"Probe handling"
-                }
-                p {
-                    +"Mean time: ${internal.probeHandlingStatistics.meanProbeHandlingTimeMillis} ms\t\t"
-                    +"Max time: ${internal.probeHandlingStatistics.maxProbeHandlingTimeMillis} ms\t\t"
-                    +"Time Q1: ${internal.probeHandlingStatistics.probeHandlingQ1} ms\t\t"
-                    +"Time Q2: ${internal.probeHandlingStatistics.probeHandlingQ2} ms\t\t"
-                    +"Time Q3: ${internal.probeHandlingStatistics.probeHandlingQ3} ms\t\t"
-                }
+
             }
 
         }
