@@ -43,6 +43,7 @@ class Matrix(val rows: Int, val columns: Int, private vararg val numbers: Double
         val result: Matrix
 
         withContext(Dispatchers.Default) {
+            delay(100)
             val rows = (0 until rows).map { row ->
                 async {
                     delay(100)

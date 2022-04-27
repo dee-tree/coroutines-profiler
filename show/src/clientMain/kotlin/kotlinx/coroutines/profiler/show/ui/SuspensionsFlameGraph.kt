@@ -9,6 +9,7 @@ import flamegraph.suspensionsColorMapper
 import kotlinext.js.Object
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.coroutines.profiler.show.serialization.CoroutineSuspensionsFrame
 import kotlinx.coroutines.profiler.show.serialization.CoroutineSuspensionsFrame.Companion.asJsonValuedElement
 import kotlinx.serialization.json.Json
@@ -28,6 +29,7 @@ class SuspensionsFlameGraph {
 
     private val flameGraph = flamegraph()
 
+    private var selectedCoroutineProbeFrame: CoroutineProbeFrame? = null
     private var selectedCoroutineId: Long? = null
     private var showSelectedCoroutineForEntireFlame = false
 
@@ -93,6 +95,14 @@ class SuspensionsFlameGraph {
         }
     }
 
+    fun showCoroutineProbeState(frame: CoroutineProbeFrame) {
+        this.selectedCoroutineProbeFrame = frame
+
+        scope.launch {
+            showFlameGraph()
+        }
+    }
+
     fun search(coroutineId: Long) {
         flameGraph.search(coroutineId.toString())
     }
@@ -107,6 +117,11 @@ class SuspensionsFlameGraph {
         val root = if (selectedCoroutineId == null || showSelectedCoroutineForEntireFlame) {
             api.getSuspensionsStackTrace()
         } else {
+            if (selectedCoroutineProbeFrame != null) {
+                val coroutineInfo = api.getCoroutineReport(selectedCoroutineProbeFrame!!.coroutineId)
+                CoroutineSuspensionsFrame()
+            }
+
             api.getSuspensionsStackTrace(selectedCoroutineId!!)
         }
 

@@ -3,6 +3,10 @@
     box-shadow: 0 0 2em gray;
 }
 
+#coroutineProbeFrameBox {
+    box-shadow: 0 0 2em gray;
+}
+
 #hoverShadowedText {
     cursor: pointer;
 }

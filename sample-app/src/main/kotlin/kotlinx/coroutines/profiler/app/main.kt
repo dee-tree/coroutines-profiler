@@ -6,6 +6,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.system.measureTimeMillis
 
 fun main() {
+    println("PID: ${ProcessHandle.current().pid()}")
     var summaryTime = 0L
     val iters = 1
 
@@ -43,4 +44,5 @@ fun main() {
 suspend fun calculateMatrix() {
     // coroutines count: rows in the first matrix
     Matrix.random(10, 1_000_000) timesConcurrent Matrix.random(1_000_000, 10)
+//    Thread.sleep(50000)
 }
