@@ -7,6 +7,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromDynamic
 import kotlinx.serialization.json.encodeToDynamic
 import react.FC
 import react.Props
@@ -27,18 +28,7 @@ class CoroutinesFlameGraph {
                 if (frame.data.name == "root") {
                     props.onExit(); return@onClick
                 }
-                props.onFrameClicked(
-                    CoroutineProbeFrame(
-                        frame.data.name,
-                        frame.data.value,
-                        null,
-                        frame.data.id,
-                        frame.data.state,
-                        frame.data.probesCount,
-                        frame.data.stacktrace,
-                        frame.data.thread
-                    )
-                )
+                props.onFrameClicked(Json.decodeFromDynamic(frame.data))
             }
             .setSearchMatch { d, term ->
                 term.toLongOrNull()?.let {
@@ -50,10 +40,6 @@ class CoroutinesFlameGraph {
         useEffectOnce {
             scope.launch {
                 select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flameGraph)
-
-//                props.selectedCoroutineId?.let {
-//                    flameGraph.search(it.toString())
-//                }
             }
         }
 
@@ -73,8 +59,6 @@ class CoroutinesFlameGraph {
 }
 
 external interface CoroutinesFlameGraphProps : Props {
-//    var coroutineSelection: Flow<Long?>
-//    var selectedCoroutineId: Long?
     var onFrameClicked: (CoroutineProbeFrame) -> Unit
     var onExit: () -> Unit
 }

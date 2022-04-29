@@ -27,6 +27,15 @@ data class CoroutineSuspensionsFrame(
 
 
     companion object {
+
+        fun CoroutineProbeFrame.toCoroutineSuspensionsFrame(coroutineInfo: ProfilingCoroutineInfo): CoroutineSuspensionsFrame {
+            val root = CoroutineSuspensionsFrame("root")
+
+            root.fillFromProbeFrame(this, coroutineInfo.creationStackTrace)
+
+            return root
+        }
+
         fun LinearCoroutinesStructure.toCoroutineSuspensionsFrame(): CoroutineSuspensionsFrame {
             val rootFrame = CoroutineSuspensionsFrame("root")
             coroutines.forEach {
@@ -52,13 +61,25 @@ data class CoroutineSuspensionsFrame(
         fun CoroutineSuspensionsFrame.asJsonValuedElement(): JsonElement {
             return Json.encodeToJsonElement(this.toFrameWithValue())
         }
+
+        fun CoroutineSuspensionsFrame.toJsonString(): String {
+            return Json.encodeToString(CoroutineSuspensionsFrameWithValue.serializer(), this.toFrameWithValue())
+        }
+    }
+
+    private fun fillFromProbeFrame(probeFrame: CoroutineProbeFrame, creationStackTrace: List<String>) {
+        updateFrames(
+            probeFrame.coroutineId,
+            creationStackTrace.reversed() + "CREATION STACKTRACE" + probeFrame.stacktrace,
+            probeFrame.probesCount
+        )
     }
 
     private fun fillFromInfo(info: ProfilingCoroutineInfo) {
         info.probes.filter { it.state == State.SUSPENDED }.forEach { suspendProbe ->
             this.updateFrames(
                 suspendProbe.coroutineId,
-                info.creationStackTrace.reversed() + suspendProbe.lastUpdatedStackTrace
+                info.creationStackTrace.reversed() + "CREATION STACKTRACE" + suspendProbe.lastUpdatedStackTrace
             )
         }
     }
@@ -73,12 +94,13 @@ data class CoroutineSuspensionsFrame(
 
     private fun updateFrames(
         coroutineId: Long,
-        stackTrace: List<String>
+        stackTrace: List<String>,
+        increment: Int = 1
     ) {
         var current = this
 
         stackTrace.forEach { stackFrame ->
-            current.coroutineValues[coroutineId] = (current.coroutineValues[coroutineId] ?: 0) + 1
+            current.coroutineValues[coroutineId] = (current.coroutineValues[coroutineId] ?: 0) + increment
             if (current.stackFrame != stackFrame)
                 current = current.getOrCreate(stackFrame)
         }
@@ -101,8 +123,8 @@ data class CoroutineSuspensionsFrame(
         @SerialName("value")
         val value: Int,
         @SerialName("coroutineValues")
-        private val coroutineValues: MutableMap<Long, Int>,
+        private val coroutineValues: Map<Long, Int>,
         @SerialName("children")
-        val _children: MutableList<CoroutineSuspensionsFrameWithValue>
+        val _children: List<CoroutineSuspensionsFrameWithValue>
     )
 }

@@ -4,7 +4,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.coroutines.profiler.show.ui.*
-import kotlinx.dom.clear
 import react.FC
 import react.Props
 import react.create
@@ -88,7 +87,9 @@ val App = FC<Props> {
                     onFrameClicked = {
                         scope.launch {
                             selectedCoroutineFrame = it
-                            println("Selected coroutine ${it.coroutineId}")
+                            println("Selected probe frame for coroutine ${it.coroutineId}")
+
+                            suspensionsFlameGraph.showCoroutineProbeState(selectedCoroutineFrame!!)
 
                             render(CoroutineProbeFrameInfo.create() {
                                 this.probeFrame = it
@@ -100,6 +101,7 @@ val App = FC<Props> {
 
                     onExit = {
                         selectedCoroutineFrame = null
+                        suspensionsFlameGraph.clearProbeSelection()
 
                         unmountComponentAtNode(document.getElementById("coroutineProbeFrameContainer")!!)
                     }
