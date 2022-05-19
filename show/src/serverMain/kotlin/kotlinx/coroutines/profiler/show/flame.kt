@@ -1,11 +1,14 @@
 package kotlinx.coroutines.profiler.show
 
 import kotlinx.coroutines.profiler.core.data.CoroutinesStructure
+import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.core.data.State
 import kotlinx.coroutines.profiler.core.data.StructuredProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.show.CoroutineStatesRange.Companion.splitByStates
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
+import kotlinx.coroutines.profiler.show.serialization.CoroutineThreadsFrame
 import kotlinx.coroutines.profiler.show.serialization.buildCoroutineProbeFrame
+import kotlinx.coroutines.profiler.show.serialization.buildCoroutineThreadsFrame
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 fun CoroutinesStructure.toProbeFrame(): CoroutineProbeFrame {
@@ -105,3 +108,18 @@ internal class CoroutineStatesRange private constructor(
 
 }
 
+internal fun ProfilingCoroutineInfo.toThreadsFrame(): CoroutineThreadsFrame =
+    buildCoroutineThreadsFrame {
+        name = "root"
+
+        this@toThreadsFrame.probes.filter { it.state == State.RUNNING }.groupingBy { it.lastUpdatedThreadName }
+            .eachCount().forEach { thread ->
+                value += thread.value
+            addChild {
+                buildCoroutineThreadsFrame {
+                    name = thread.key!!
+                    value = thread.value
+                }
+            }
+        }
+    }

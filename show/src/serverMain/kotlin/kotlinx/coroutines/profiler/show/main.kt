@@ -29,6 +29,7 @@ fun main(args: Array<String>) {
             allCoroutinesIdsRoute()
             coroutineReportRoute()
             suspensionPointsCoroutineStackTraceRoute()
+            threadsRoute()
         }
     }.start(wait = true)
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.coroutines.profiler.show.serialization.CoroutineSuspensionsFrame
+import kotlinx.coroutines.profiler.show.serialization.CoroutineThreadsFrame
 
 class Api(private val client: HttpClient) {
 
@@ -31,14 +32,15 @@ class Api(private val client: HttpClient) {
     }
 
     suspend fun getSuspensionsStackTrace(coroutineId: Long): CoroutineSuspensionsFrame {
-        println("Intended to request suspensions stack trace for coroutine $coroutineId")
         return client.get<CoroutineSuspensionsFrame>("${endpoint}/suspensionsStackTrace/${coroutineId}") {
-//            parameter("id", coroutineId)
         }
     }
 
     suspend fun getSuspensionsStackTrace(): CoroutineSuspensionsFrame {
-        println("Intended to request suspensions stack trace for coroutine")
         return client.get<CoroutineSuspensionsFrame>("${endpoint}/suspensionsStackTrace")
+    }
+
+    suspend fun getThreadsFrame(coroutineId: Long): CoroutineThreadsFrame {
+        return client.get<CoroutineThreadsFrame>("${endpoint}/threads/${coroutineId}")
     }
 }

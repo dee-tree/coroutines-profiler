@@ -21,6 +21,7 @@ val App = FC<Props> {
     var selectedCoroutineId: Long? = null
     val coroutinesFlameGraph by lazy { CoroutinesFlameGraph() }
     val suspensionsFlameGraph by lazy { SuspensionsFlameGraph() }
+    val threadsFlameGraph by lazy { ThreadsFlameGraph() }
 
     h3 {
         css {
@@ -58,11 +59,13 @@ val App = FC<Props> {
                         selectedCoroutineId = focusedCoroutine.id
                         coroutinesFlameGraph.search(focusedCoroutine.id)
                         suspensionsFlameGraph.showCoroutine(focusedCoroutine.id)
+                        threadsFlameGraph.showCoroutine(focusedCoroutine.id)
                     }
                     onSelectionCleared = {
                         selectedCoroutineId = null
                         coroutinesFlameGraph.clear()
                         suspensionsFlameGraph.clear()
+                        threadsFlameGraph.clear()
                     }
                 }
 
@@ -108,6 +111,11 @@ val App = FC<Props> {
                 }
 
                 suspensionsFlameGraph.fc {
+                    onExit = {}
+                    onFrameClicked = {}
+                }
+
+                threadsFlameGraph.fc {
                     onExit = {}
                     onFrameClicked = {}
                 }
