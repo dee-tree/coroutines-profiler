@@ -18,6 +18,7 @@ fun Route.threadsRoute() {
 
         val selectedCoroutine = ProfilingStorage.linearCoroutinesStructure.coroutines.find { it.id == id }!!
 
+        println("threads: ${selectedCoroutine.toThreadsFrame()}")
         call.respond(selectedCoroutine.toThreadsFrame())
     }
 }

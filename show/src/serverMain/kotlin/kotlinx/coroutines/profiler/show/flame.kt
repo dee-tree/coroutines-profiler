@@ -1,10 +1,7 @@
 package kotlinx.coroutines.profiler.show
 
-import kotlinx.coroutines.profiler.core.data.CoroutinesStructure
-import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
-import kotlinx.coroutines.profiler.core.data.State
-import kotlinx.coroutines.profiler.core.data.StructuredProfilingCoroutineInfo
-import kotlinx.coroutines.profiler.show.CoroutineStatesRange.Companion.splitByStates
+import kotlinx.coroutines.profiler.core.data.*
+import kotlinx.coroutines.profiler.show.CoroutineStateRange.Companion.splitByStates
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.coroutines.profiler.show.serialization.CoroutineThreadsFrame
 import kotlinx.coroutines.profiler.show.serialization.buildCoroutineProbeFrame
@@ -15,7 +12,7 @@ fun CoroutinesStructure.toProbeFrame(): CoroutineProbeFrame {
     val root = buildCoroutineProbeFrame {
         name = "root"
 
-        val probesTotally = structure.maxOf { it.probes.last().probeId }.toInt()
+        val probesTotally = structure.maxOf { it.probes.last().probeId }.toInt() + 1
 
         value = probesTotally
 
@@ -34,7 +31,7 @@ private fun StructuredProfilingCoroutineInfo.toProbeFrames(
     parentCompensationCoefficient: Double,
     parentDumpsIds: IntRange
 ): List<CoroutineProbeFrame> {
-    val states = this@toProbeFrames.splitByStates()
+    val states = this@toProbeFrames.splitByStates(false)
 
     return buildList {
         states.forEach { state ->
@@ -48,7 +45,7 @@ private fun StructuredProfilingCoroutineInfo.toProbeFrames(
                     coroutineState = state.state.toString()
                     probes = probesForThisParentState
                     stacktrace = state.lastStackTrace
-                    thread = state.thread
+                    threads = state.threads.toList()
                     value = width
 
                     this@toProbeFrames.children.forEach {
@@ -66,45 +63,49 @@ private fun StructuredProfilingCoroutineInfo.toProbeFrames(
 
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-internal class CoroutineStatesRange private constructor(
+internal class CoroutineStateRange private constructor(
+    val coroutineId: Long,
     val state: State,
-    val thread: String?,
-    val lastStackTrace: List<String>,
-    fromProbeId: Int,
-    toProbeId: Int
-) {
-    private var _fromProbeId = fromProbeId
-    private var _toProbeId = toProbeId
+    val lastStackTrace: List<String> = emptyList(),
+    val probesRange: IntRange,
+    vararg val threads: String,
+    ) {
 
-    val fromProbeId get() = _fromProbeId
-    val toProbeId get() = _toProbeId
-
-    val probesRange get() = fromProbeId..toProbeId
-
-    companion object {
-        internal fun StructuredProfilingCoroutineInfo.splitByStates(): List<CoroutineStatesRange> {
-            val split = mutableListOf<CoroutineStatesRange>()
-
-            probes.forEach {
-                val last = split.lastOrNull()
-                if (it.state == last?.state && it.lastUpdatedThreadName == last.thread && it.lastUpdatedStackTrace == last.lastStackTrace) {
-                    split[split.lastIndex]._toProbeId = it.probeId
-                } else {
-                    split.add(
-                        CoroutineStatesRange(
-                            it.state,
-                            it.lastUpdatedThreadName,
-                            it.lastUpdatedStackTrace,
-                            it.probeId,
-                            it.probeId
-                        )
-                    )
-                }
-            }
-
-            return split
+    private data class ProbesStateGroupKey(
+        val coroutineId: Long,
+        val coroutineState: State,
+        val stackTrace: List<String>,
+        val thread: String?,
+    ) {
+        companion object {
+            fun fromDelegate(delegate: CoroutineProbe, differentThreadsInitiateDifferentFrames: Boolean): ProbesStateGroupKey = ProbesStateGroupKey(
+                delegate.coroutineId,
+                delegate.state,
+                delegate.lastUpdatedStackTrace,
+                if (differentThreadsInitiateDifferentFrames) delegate.lastUpdatedThreadName else null
+            )
         }
     }
+
+    companion object {
+        internal fun StructuredProfilingCoroutineInfo.splitByStates(
+            differentThreadsInitiateDifferentFrames: Boolean
+        ): List<CoroutineStateRange> {
+            val splitByStates = probes.groupBy { ProbesStateGroupKey.fromDelegate(it, differentThreadsInitiateDifferentFrames) }
+
+            val split = splitByStates.map { (splitKey, stateSplit) ->
+                CoroutineStateRange(
+                    splitKey.coroutineId,
+                    splitKey.coroutineState,
+                    splitKey.stackTrace,
+                    stateSplit.minOf { it.probeId }..stateSplit.maxOf { it.probeId },
+                    *stateSplit.mapNotNull { it.lastUpdatedThreadName }.toSet().toTypedArray(),
+                    )
+            }
+
+        return split
+    }
+}
 
 }
 
@@ -115,11 +116,11 @@ internal fun ProfilingCoroutineInfo.toThreadsFrame(): CoroutineThreadsFrame =
         this@toThreadsFrame.probes.filter { it.state == State.RUNNING }.groupingBy { it.lastUpdatedThreadName }
             .eachCount().forEach { thread ->
                 value += thread.value
-            addChild {
-                buildCoroutineThreadsFrame {
-                    name = thread.key!!
-                    value = thread.value
+                addChild {
+                    buildCoroutineThreadsFrame {
+                        name = thread.key!!
+                        value = thread.value
+                    }
                 }
             }
-        }
     }

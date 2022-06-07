@@ -50,7 +50,9 @@ internal fun readCoroutinesStructureFromStream(input: InputStream): LinearCorout
 internal fun readProbesFromStream(input: InputStream): Probes = Probes(buildList {
     while (input.available() != 0) {
         val probeSize = input.readNBytes(Int.SIZE_BYTES).toInt()
+        println("probe size: ${probeSize}")
         val probe = ProtoBuf.decodeFromByteArray<CoroutineProbe>(input.readNBytes(probeSize))
+        println("probe: ${probe}")
         add(probe)
     }
 })
@@ -71,7 +73,10 @@ fun CoroutinesDump.encodeToByteArray(): ByteArray {
         val encodedProbe = ProtoBuf.encodeToByteArray(probe)
 
         bytes.add(encodedProbe.size.toByteArray())
+        println("Add bytes for probe size: ${encodedProbe.size}")
         bytes.add(encodedProbe)
+        println("Add bytes for probe: ${encodedProbe}")
+        println("---")
 
     }
 

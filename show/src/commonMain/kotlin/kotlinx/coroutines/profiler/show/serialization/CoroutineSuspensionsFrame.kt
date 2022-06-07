@@ -70,7 +70,7 @@ data class CoroutineSuspensionsFrame(
     private fun fillFromProbeFrame(probeFrame: CoroutineProbeFrame, creationStackTrace: List<String>) {
         updateFrames(
             probeFrame.coroutineId,
-            creationStackTrace.reversed() + "CREATION STACKTRACE" + probeFrame.stacktrace,
+            creationStackTrace.reversed() + "CREATION STACKTRACE" + probeFrame.stacktrace.reversed(),
             probeFrame.probesCount
         )
     }
@@ -79,7 +79,7 @@ data class CoroutineSuspensionsFrame(
         info.probes.filter { it.state == State.SUSPENDED }.forEach { suspendProbe ->
             this.updateFrames(
                 suspendProbe.coroutineId,
-                info.creationStackTrace.reversed() + "CREATION STACKTRACE" + suspendProbe.lastUpdatedStackTrace
+                info.creationStackTrace.reversed() + "CREATION STACKTRACE" + suspendProbe.lastUpdatedStackTrace.reversed()
             )
         }
     }
@@ -104,6 +104,9 @@ data class CoroutineSuspensionsFrame(
             if (current.stackFrame != stackFrame)
                 current = current.getOrCreate(stackFrame)
         }
+
+        // for last
+        current.coroutineValues[coroutineId] = (current.coroutineValues[coroutineId] ?: 0) + increment
     }
 
     /*

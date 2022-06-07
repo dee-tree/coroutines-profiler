@@ -22,6 +22,15 @@ fun main(args: Array<String>) {
             json()
         }
 
+        install(StatusPages) {
+            exception<Throwable> { error ->
+                System.err.println("Exception occurred!")
+                System.err.println(error.message)
+                error.printStackTrace(System.err)
+                System.err.println(error)
+            }
+        }
+
         routing {
             staticRoute()
             profilingStatisticsRoute()

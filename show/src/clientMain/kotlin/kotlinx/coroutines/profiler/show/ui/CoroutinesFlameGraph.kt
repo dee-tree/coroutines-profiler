@@ -11,7 +11,10 @@ import kotlinx.serialization.json.decodeFromDynamic
 import kotlinx.serialization.json.encodeToDynamic
 import react.FC
 import react.Props
+import react.dom.html.InputType
 import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.input
+import react.dom.html.ReactHTML.label
 import react.useEffectOnce
 
 class CoroutinesFlameGraph {
@@ -46,6 +49,19 @@ class CoroutinesFlameGraph {
 
         div {
             id = "flame"
+        }
+
+
+        div {
+            input {
+                type = InputType.checkbox
+                id = "cb_combine_same_states"
+
+            }
+            label {
+                htmlFor = "cb_combine_same_states"
+                + "Combine same states on timeline"
+            }
         }
     }
 

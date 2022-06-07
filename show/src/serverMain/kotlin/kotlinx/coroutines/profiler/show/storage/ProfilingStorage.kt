@@ -59,7 +59,10 @@ object ProfilingStorage {
 
     suspend fun PipelineContext<Unit, ApplicationCall>.initializeProfilingResultsIfNot() {
         if (_profilingResults != null) return
+        initializeProfilingResults()
+    }
 
+    suspend fun PipelineContext<Unit, ApplicationCall>.initializeProfilingResults() {
         checkProfilingResultsFileExists()
         setProfilingResults(readProfilingResultsFile(profilingResultFile))
     }
@@ -69,6 +72,15 @@ object ProfilingStorage {
         if (_coroutinesProbes != null) return
 
         initializeProfilingResultsIfNot()
+
+        setCoroutinesProbes(profilingResults.loadProbes())
+        setLinearCoroutinesStructure(
+            profilingResults.loadStructure().addProbes(coroutinesProbes.probes)
+        )
+    }
+
+    suspend fun PipelineContext<Unit, ApplicationCall>.initializeCoroutines() {
+        initializeProfilingResults()
 
         setCoroutinesProbes(profilingResults.loadProbes())
         setLinearCoroutinesStructure(

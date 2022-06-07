@@ -11,6 +11,7 @@ import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h3
 import react.dom.render
+import react.dom.svg.ReactSVG
 import react.dom.unmountComponentAtNode
 
 private val scope = MainScope()

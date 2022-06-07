@@ -27,7 +27,7 @@ val CoroutineProbeFrameInfo = FC<CoroutineProbeFrameProps> { props ->
 
         +"Sampled at this state ${props.probeFrame.probesCount} times"
         br()
-        if (props.probeFrame.coroutineState == "RUNNING") +"At thread: ${props.probeFrame.thread}"
+        if (props.probeFrame.coroutineState == "RUNNING") +"At threads: ${props.probeFrame.threads}"
 
 
     }

@@ -21,7 +21,7 @@ data class CoroutineProbeFrame(
     val coroutineState: String,
     val probesCount: Int,
     val stacktrace: List<String>,
-    val thread: String? = null,
+    val threads: List<String> = emptyList(),
 ) {
 
     fun walk(action: (CoroutineProbeFrame) -> Unit) {
@@ -50,7 +50,7 @@ class CoroutineProbeFrameBuilder @PublishedApi internal constructor() {
     var coroutineId: Long = -1
     var coroutineState: String = ""
     var stacktrace: List<String> = listOf()
-    var thread: String? = null
+    var threads: List<String> = emptyList()
 
     fun addChild(builderAction: CoroutineProbeFrameBuilder.() -> CoroutineProbeFrame) {
         childrenInitially ?: run { childrenInitially = mutableListOf() }
@@ -71,6 +71,6 @@ class CoroutineProbeFrameBuilder @PublishedApi internal constructor() {
         coroutineState,
         probes,
         stacktrace,
-        thread
+        threads
     )
 }

@@ -74,4 +74,25 @@ class CoroutinesProfiler(
             }
         }
     }
+
+    /*private fun installSignalHandler() {
+        try {
+            Signal.handle(Signal("TRAP")) { // kill -5
+                println("Handle signal")
+                running = false
+                *//*if (DebugProbesImpl.isInstalled) {
+                    // Case with 'isInstalled' changed between this check-and-act is not considered
+                    // a real debug probes use-case, thus is not guarded against.
+                    DebugProbesImpl.dumpCoroutines(System.out)
+                } else {
+                    println("Cannot perform coroutines dump, debug probes are disabled")
+                }*//*
+            }
+        } catch (t: Throwable) {
+            println("signal can't be handled")
+//            running = false
+            // Do nothing, signal cannot be installed, e.g. because we are on Windows
+        }
+    }*/
+
 }
