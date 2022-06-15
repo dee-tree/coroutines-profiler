@@ -1,5 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.util.Properties
+import java.util.*
 
 plugins {
     kotlin("jvm") version "1.6.10"
@@ -47,8 +47,9 @@ tasks.create<JavaExec>("runWithProfiler") {
     classpath(sourceSets["main"].runtimeClasspath)
     mainClass.set(mainClassQualifiedName)
 
-    val args = "-o \"out/results/profile\" -i 4 -s "
-    val agentPath = "${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}profiler.jar"
+    val args = "-o out/results/profile -i 4 -s "
+    val agentPath =
+        "${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}profiler.jar"
 
     jvmArgs(
         "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",

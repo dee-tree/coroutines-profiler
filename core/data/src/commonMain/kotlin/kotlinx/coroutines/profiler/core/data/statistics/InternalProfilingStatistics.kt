@@ -13,7 +13,8 @@ data class ProbeTakingStatistics(
 
     val probeTakingQ1: Long, // quartile 1: percentile 25. 25% of elements is lower than this
     val probeTakingQ2: Long, // quartile 2: percentile 50. 50% of elements is lower than this
-    val probeTakingQ3: Long  // quartile 3: percentile 75. 75% of elements is lower than this
+    val probeTakingQ3: Long,  // quartile 3: percentile 75. 75% of elements is lower than this
+    val takingTimingsSampling: Map<Long, Int> // <timing, ms: count of taking sample this time>
 )
 
 @kotlinx.serialization.Serializable
@@ -23,5 +24,6 @@ data class ProbeHandlingStatistics(
 
     val probeHandlingQ1: Long, // quartile 1: percentile 25. 25% of elements is lower than this
     val probeHandlingQ2: Long, // quartile 2: percentile 50. 50% of elements is lower than this
-    val probeHandlingQ3: Long  // quartile 3: percentile 75. 75% of elements is lower than this
+    val probeHandlingQ3: Long,  // quartile 3: percentile 75. 75% of elements is lower than this
+    val handlingTimingsSampling: Map<Long, Int> // <timing, ms: count of handling sample this time>
 )

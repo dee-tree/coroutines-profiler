@@ -7,6 +7,7 @@ plugins {
 val serializationVersion = "1.3.2"
 val ktorVersion = "1.6.7"
 val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
+val letsPlotKotlinVersion = "3.2.0"
 
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
@@ -102,6 +103,8 @@ kotlin {
 
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
+                implementation("org.jetbrains.lets-plot:lets-plot-kotlin-js:$letsPlotKotlinVersion")
+
                 implementation(npm("d3-flame-graph", "4.1.3"))
                 implementation(npm("d3", "7.4.3"))
             }
@@ -146,7 +149,7 @@ tasks.named<JavaExec>("run") {
     )
 
     args(
-        "W:\\Kotlin\\Projects\\coroutines-profiler\\sample-app\\out\\results\\profile\\coroprof.json"
+        "/home/sokolov/IdeaProjects/coroutines-profiler/sample-app/out/results/profile/coroprof.json"
     )
     classpath(tasks.getByName<Jar>("jar"))
 }

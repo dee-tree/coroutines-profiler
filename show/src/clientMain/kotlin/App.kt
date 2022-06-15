@@ -11,7 +11,6 @@ import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h3
 import react.dom.render
-import react.dom.svg.ReactSVG
 import react.dom.unmountComponentAtNode
 
 private val scope = MainScope()
@@ -84,9 +83,6 @@ val App = FC<Props> {
                     alignSelf = AlignSelf.center
                 }
 
-                StatisticsComponent()
-
-
                 coroutinesFlameGraph.fc {
                     onFrameClicked = {
                         scope.launch {
@@ -120,6 +116,17 @@ val App = FC<Props> {
                     onExit = {}
                     onFrameClicked = {}
                 }
+
+
+                val statisticsContainerId = "statisticsContainerId"
+                div {
+                    id = statisticsContainerId
+
+                    StatisticsComponent() {
+                        containerId = statisticsContainerId
+                    }
+                }
+
             }
 
 

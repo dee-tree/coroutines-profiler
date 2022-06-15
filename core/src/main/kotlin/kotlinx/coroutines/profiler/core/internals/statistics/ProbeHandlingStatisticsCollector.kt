@@ -37,5 +37,6 @@ internal class ProbeHandlingStatisticsCollector {
         probeHandlingTimings.percentile(25),
         probeHandlingTimings.percentile(50),
         probeHandlingTimings.percentile(75),
+        probeHandlingTimings
     )
 }

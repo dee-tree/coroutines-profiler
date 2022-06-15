@@ -2,6 +2,11 @@ package kotlinx.coroutines.profiler.show.ui
 
 import api
 import csstype.*
+import jetbrains.letsPlot.Pos
+import jetbrains.letsPlot.frontend.JsFrontendUtil
+import jetbrains.letsPlot.geom.geomHistogram
+import jetbrains.letsPlot.letsPlot
+import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
@@ -9,7 +14,6 @@ import react.FC
 import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.b
-import react.dom.html.ReactHTML.base
 import react.dom.html.ReactHTML.br
 import react.dom.html.ReactHTML.details
 import react.dom.html.ReactHTML.div
@@ -21,8 +25,11 @@ import react.useEffectOnce
 import react.useState
 
 private val scope = MainScope()
+const val takingDivId: String = "probeTakingDiv"
+const val handlingDivId: String = "probeHandlingDiv"
 
-val StatisticsComponent = FC<Props> {
+val StatisticsComponent = FC<StatsProps> {
+
     var profilingStatistics by useState(ProfilingStatistics(0, 0, 0))
 
     useEffectOnce {
@@ -91,6 +98,7 @@ val StatisticsComponent = FC<Props> {
 
 
                     div {
+                        id = takingDivId
 
                         css {
                             paddingRight = 1.em
@@ -117,6 +125,7 @@ val StatisticsComponent = FC<Props> {
 
 
                     div {
+                        id = handlingDivId
                         css {
                             paddingRight = 1.em
                             paddingLeft = 1.em
@@ -137,7 +146,6 @@ val StatisticsComponent = FC<Props> {
                             br()
                             +"Time Q3: ${internal.probeHandlingStatistics.probeHandlingQ3} ms"
                         }
-
                     }
 
 
@@ -149,4 +157,27 @@ val StatisticsComponent = FC<Props> {
 
     }
 
+    profilingStatistics.internalStatistics?.let { internal ->
+        val takingSampling = internal.probeTakingStatistics.takingTimingsSampling.toMutableMap()
+        val handlingSampling = internal.probeHandlingStatistics.handlingTimingsSampling.toMutableMap()
+
+        val dataTaking =
+            takingSampling.entries.fold(emptyList<Long>()) { acc, cur -> acc + List(cur.value) { cur.key } }
+        val dataHandling =
+            handlingSampling.entries.fold(emptyList<Long>()) { acc, cur -> acc + List(cur.value) { cur.key } }
+        val hist = letsPlot(
+            mapOf(
+                "timings" to dataTaking + dataHandling,
+                "cond" to List(dataTaking.size) { "take probes" } + List(dataHandling.size) { "handle probes" })
+        ) { x = "timings"; fill = "cond" } + geomHistogram(
+            alpha = 0.7,
+            position = Pos.identity
+        )
+
+        document.getElementById(it.containerId)!!.appendChild(JsFrontendUtil.createPlotDiv(hist))
+    }
+}
+
+external interface StatsProps : Props {
+    var containerId: String
 }

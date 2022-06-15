@@ -4,8 +4,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.profiler.core.data.CoroutinesDump
 import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
 import kotlinx.coroutines.profiler.core.data.statistics.ProbeHandlingStatistics
-import kotlinx.coroutines.profiler.core.internals.statistics.ProbeHandlingStatisticsCollector
 import kotlinx.coroutines.profiler.core.data.statistics.ProbeTakingStatistics
+import kotlinx.coroutines.profiler.core.internals.statistics.ProbeHandlingStatisticsCollector
 import kotlinx.coroutines.profiler.core.internals.statistics.ProbeTakingStatisticsCollector
 import kotlin.contracts.ExperimentalContracts
 import kotlin.time.ExperimentalTime
