@@ -1,4 +1,4 @@
-package base.delay
+package delay
 
 import base.ProbeTakingWithDelayedTracesBenchmark
 import kotlinx.coroutines.coroutineScope
