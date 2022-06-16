@@ -4,6 +4,7 @@ import java.util.*
 plugins {
     kotlin("jvm") version "1.6.10"
     application
+    id("me.champeau.jmh") version "0.6.6"
 }
 
 group = "kotlinx.coroutines.profiler"
@@ -15,6 +16,13 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0-SNAPSHOT")
+
+    jmh("commons-io:commons-io:2.11.0")
+    jmh("org.openjdk.jmh:jmh-core:1.35")
+    jmh("org.openjdk.jmh:jmh-generator-annprocess:1.35")
+
+    jmh(project(":core"))
+    jmh("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
 
     testImplementation(kotlin("test"))
 }
@@ -74,3 +82,23 @@ tasks.jar {
 }
 
 tasks["test"].dependsOn(":core:fatJar")
+
+
+val jarName = "bst-removal-bench.jar"
+
+tasks.named("jmhJar", type = Jar::class) {
+    archiveFileName.set(jarName)
+}
+
+task("jmhRun", type = me.champeau.jmh.JMHTask::class) {
+    jarArchive.set(File(File(project.buildDir.absoluteFile, "libs"), jarName))
+    resultsFile.set(File(File(project.buildDir.absoluteFile, "results/jmh"), "results.json"))
+//    resultFormat.set("json")
+
+    jvmArgs.set(listOf("-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}"))
+
+    failOnError.set(true)
+
+    dependsOn("jmhJar")
+
+}

@@ -14,17 +14,23 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalContracts
 @ExperimentalCoroutinesApi
 class CoroutinesProfiler(
     private val dumpWriter: DumpWriter,
     val collectInternalStatistics: Boolean = DEFAULT_SHOULD_INTERNAL_STATISTICS_BE_COLLECTED
 ) {
 
+    companion object {
+        public var DELAYED_CREATION_STACK_TRACES = true
+    }
+
+    @ExperimentalTime
+    @ExperimentalContracts
     private val sampler: Sampler = if (collectInternalStatistics) StatsCollectingSamplerImpl() else SamplerImpl()
     private var running = false
 
+    @ExperimentalContracts
+    @ExperimentalTime
     fun attachAndRun(timeInterval: Int = 5) {
         running = true
 
@@ -48,7 +54,7 @@ class CoroutinesProfiler(
         })
 
         DebugProbes.install()
-        DebugProbes.delayedCreationStackTraces = true
+        DebugProbes.delayedCreationStackTraces = DELAYED_CREATION_STACK_TRACES
         DebugProbes.sanitizeStackTraces = true
 
         thread(isDaemon = true) {
@@ -74,25 +80,5 @@ class CoroutinesProfiler(
             }
         }
     }
-
-    /*private fun installSignalHandler() {
-        try {
-            Signal.handle(Signal("TRAP")) { // kill -5
-                println("Handle signal")
-                running = false
-                *//*if (DebugProbesImpl.isInstalled) {
-                    // Case with 'isInstalled' changed between this check-and-act is not considered
-                    // a real debug probes use-case, thus is not guarded against.
-                    DebugProbesImpl.dumpCoroutines(System.out)
-                } else {
-                    println("Cannot perform coroutines dump, debug probes are disabled")
-                }*//*
-            }
-        } catch (t: Throwable) {
-            println("signal can't be handled")
-//            running = false
-            // Do nothing, signal cannot be installed, e.g. because we are on Windows
-        }
-    }*/
 
 }
