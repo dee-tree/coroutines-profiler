@@ -1,63 +1,64 @@
 package base
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.DebugProbes
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.CoroutinesProfiler
 import org.openjdk.jmh.annotations.*
 import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
 
 @Suppress("unused")
-@BenchmarkMode(Mode.AverageTime)
+@BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
-@State(Scope.Benchmark)
+@State(Scope.Thread)
 abstract class ProbeTakingWithDelayedTracesBenchmark {
 
     @Param("true", "false")
     var useDelayedCreationStackTraces: Boolean = false
 
-    @ExperimentalCoroutinesApi
-    @Setup(Level.Invocation)
+    private lateinit var globalJob: Job
 
+    @ExperimentalCoroutinesApi
+    @Setup(Level.Iteration)
     fun setup() {
         CoroutinesProfiler.DELAYED_CREATION_STACK_TRACES = useDelayedCreationStackTraces
         DebugProbes.install()
 
-        doOnInvocationSetup()
+        doOnIterationSetup()
+
+        globalJob = GlobalScope.launch {
+            while (true) {
+                launch {
+                    doInCoroutineScope()
+                }.join()
+            }
+        }
     }
 
-    open fun doOnInvocationSetup() = Unit
+    open fun doOnIterationSetup() = Unit
 
     @ExperimentalCoroutinesApi
-    @TearDown(Level.Invocation)
+    @TearDown(Level.Iteration)
     fun tearDown() {
+        runBlocking {
+            globalJob.cancelAndJoin()
+        }
+
         DebugProbes.uninstall()
 
-        doOnInvocationTearDown()
+        doOnIterationTearDown()
     }
 
-    open fun doOnInvocationTearDown() = Unit
+    open fun doOnIterationTearDown() = Unit
 
     @Benchmark
     @Fork(1)
     fun doWork(blackhole: Blackhole) {
-        var finished = false
-        GlobalScope.launch {
-            launch {
-                doInCoroutineScope(blackhole)
-            }.join()
-            finished = true
-        }
-
-        while (!finished) {
-            DebugProbes.dumpCoroutinesInfo()
-        }
+        blackhole.consume(DebugProbes.dumpCoroutinesInfo())
     }
 
-    abstract suspend fun doInCoroutineScope(blackhole: Blackhole)
+    abstract suspend fun doInCoroutineScope()
 
 }
