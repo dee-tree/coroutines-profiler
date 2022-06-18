@@ -10,6 +10,9 @@ plugins {
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
+val ktorVersion = "1.6.7"
+
+
 repositories {
     mavenCentral()
 }
@@ -23,6 +26,10 @@ dependencies {
 
     jmh(project(":core"))
     jmh("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
+
+    implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
 
     testImplementation(kotlin("test"))
 }

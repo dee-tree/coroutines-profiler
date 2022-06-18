@@ -71,6 +71,9 @@ internal class ProtobufDumpWriter(
             }
         }
         executor.shutdown()
+        println("Await all tasks execution by Executor")
+        executor.awaitTermination(1, TimeUnit.HOURS)
+        println("All tasks executed by Executor!")
 
         ProfilingResultFile(
             coroutinesStructureFile.absolutePath,
@@ -83,8 +86,6 @@ internal class ProtobufDumpWriter(
                 internalStatistics
             )
         ).writeToFile(profilingResultsFile)
-
-        executor.awaitTermination(1, TimeUnit.SECONDS)
     }
 
     fun File.compress(compression: Compression) {
