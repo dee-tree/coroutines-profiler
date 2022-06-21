@@ -1,7 +1,6 @@
 package kotlinx.coroutines.profiler.core.data
 
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Transient
 
 
 @kotlinx.serialization.Serializable
@@ -15,7 +14,7 @@ open class ProfilingCoroutineInfo(
     @SerialName("creationStackTrace")
     open val creationStackTrace: List<String>,
 
-    @Transient
+    @kotlinx.serialization.Serializable
     protected val _probes: MutableList<CoroutineProbe> = mutableListOf()
 ) {
 

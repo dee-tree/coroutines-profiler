@@ -9,20 +9,24 @@ import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromDynamic
 import kotlinx.serialization.json.encodeToDynamic
-import react.FC
-import react.Props
+import react.*
 import react.dom.html.InputType
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.input
 import react.dom.html.ReactHTML.label
-import react.useEffectOnce
 
-class CoroutinesFlameGraph {
-    private val scope = MainScope()
+private val scope = MainScope()
 
-    private val flameGraph = flamegraph()
 
-    val fc = FC<CoroutinesFlameGraphProps> { props ->
+private val flameGraph = flamegraph()
+
+val CoroutinesFlameGraph = FC<CoroutinesFlameGraphProps> { props ->
+
+    val flameGraph = useMemo<FlameGraph>(callback = { flameGraph })
+
+    var canBeCleared: Boolean by useState(false)
+
+    useEffectOnce {
         flameGraph
             .setColorMapper(::coroutineStateColorMapper)
             .title("Coroutines states sequence")
@@ -31,6 +35,7 @@ class CoroutinesFlameGraph {
                 if (frame.data.name == "root") {
                     props.onExit(); return@onClick
                 }
+
                 props.onFrameClicked(Json.decodeFromDynamic(frame.data))
             }
             .setSearchMatch { d, term ->
@@ -38,43 +43,47 @@ class CoroutinesFlameGraph {
                     coroutineIdSearchMatch(d, it)
                 } ?: return@setSearchMatch false
             }
-        flameGraph.label(::coroutineFrameLabel)
+            .label(::coroutineFrameLabel)
 
-        useEffectOnce {
-            scope.launch {
-                select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flameGraph)
-            }
+        scope.launch {
+            select("#flame").datum(Json.encodeToDynamic(api.getStacks()) as Object).call(flameGraph)
         }
+    }
 
-
-        div {
-            id = "flame"
-        }
-
-
-        div {
-            input {
-                type = InputType.checkbox
-                id = "cb_combine_same_states"
-
-            }
-            label {
-                htmlFor = "cb_combine_same_states"
-                + "Combine same states on timeline"
+    useEffect {
+        props.coroutineIdToSearch?.let {
+            flameGraph.search(it.toString())
+            canBeCleared = true
+        } ?: run {
+            if (canBeCleared) {
+                flameGraph.clear()
+                canBeCleared = false
             }
         }
     }
 
-    fun search(coroutineId: Long) {
-        flameGraph.search(coroutineId.toString())
+
+    div {
+        id = "flame"
     }
 
-    fun clear() {
-        flameGraph.clear()
+
+    div {
+        input {
+            type = InputType.checkbox
+            id = "cb_combine_same_states"
+
+        }
+        label {
+            htmlFor = "cb_combine_same_states"
+            +"Combine same states on timeline"
+        }
     }
 }
 
+
 external interface CoroutinesFlameGraphProps : Props {
+    var coroutineIdToSearch: Long?
     var onFrameClicked: (CoroutineProbeFrame) -> Unit
     var onExit: () -> Unit
 }

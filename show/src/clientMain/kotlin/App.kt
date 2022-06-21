@@ -1,27 +1,20 @@
 import csstype.*
-import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.show.serialization.CoroutineProbeFrame
 import kotlinx.coroutines.profiler.show.ui.*
 import react.FC
 import react.Props
-import react.create
 import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h3
-import react.dom.render
-import react.dom.unmountComponentAtNode
+import react.useState
 
 private val scope = MainScope()
 
 val App = FC<Props> {
 
-    var selectedCoroutineFrame: CoroutineProbeFrame? = null
-    var selectedCoroutineId: Long? = null
-    val coroutinesFlameGraph by lazy { CoroutinesFlameGraph() }
-    val suspensionsFlameGraph by lazy { SuspensionsFlameGraph() }
-    val threadsFlameGraph by lazy { ThreadsFlameGraph() }
+    var selectedCoroutineFrame: CoroutineProbeFrame? by useState(null)
+    var selectedCoroutineId: Long? by useState(null)
 
     h3 {
         css {
@@ -57,20 +50,22 @@ val App = FC<Props> {
                 CoroutinesReport() {
                     onCoroutineSelected = { focusedCoroutine ->
                         selectedCoroutineId = focusedCoroutine.id
-                        coroutinesFlameGraph.search(focusedCoroutine.id)
-                        suspensionsFlameGraph.showCoroutine(focusedCoroutine.id)
-                        threadsFlameGraph.showCoroutine(focusedCoroutine.id)
                     }
                     onSelectionCleared = {
                         selectedCoroutineId = null
-                        coroutinesFlameGraph.clear()
-                        suspensionsFlameGraph.clear()
-                        threadsFlameGraph.clear()
+                    }
+                }
+
+                if (selectedCoroutineId != null || selectedCoroutineFrame != null) {
+                    CoroutineInfo {
+                        this.coroutineId = selectedCoroutineId
+                        this.probeFrame = selectedCoroutineFrame
                     }
                 }
 
                 div {
                     id = "coroutineProbeFrameContainer"
+
                 }
             }
 
@@ -83,49 +78,37 @@ val App = FC<Props> {
                     alignSelf = AlignSelf.center
                 }
 
-                coroutinesFlameGraph.fc {
-                    onFrameClicked = {
-                        scope.launch {
-                            selectedCoroutineFrame = it
+                div {
+                    id = "coroutinesFlameGraphContainer"
+
+
+                    CoroutinesFlameGraph {
+                        coroutineIdToSearch = selectedCoroutineId
+                        onFrameClicked = {
                             println("Selected probe frame for coroutine ${it.coroutineId}")
+                            selectedCoroutineFrame = it
 
-                            suspensionsFlameGraph.showCoroutineProbeState(selectedCoroutineFrame!!)
+                        }
 
-                            render(CoroutineProbeFrameInfo.create() {
-                                this.probeFrame = it
-                            }, document.getElementById("coroutineProbeFrameContainer")!!)
-
-                            document.getElementById("coroutineProbeFrameContainer")
+                        onExit = {
+                            selectedCoroutineFrame = null
                         }
                     }
 
-                    onExit = {
-                        selectedCoroutineFrame = null
-                        suspensionsFlameGraph.clearProbeSelection()
+                }
 
-                        unmountComponentAtNode(document.getElementById("coroutineProbeFrameContainer")!!)
+                SuspensionsFlameGraph {
+                    this.coroutineId = selectedCoroutineId
+                    this.probeFrame = selectedCoroutineFrame
+                }
+
+                selectedCoroutineId?.let { coroId ->
+                    ThreadsFlameGraph {
+                        this.coroutineId = coroId
                     }
                 }
 
-                suspensionsFlameGraph.fc {
-                    onExit = {}
-                    onFrameClicked = {}
-                }
-
-                threadsFlameGraph.fc {
-                    onExit = {}
-                    onFrameClicked = {}
-                }
-
-
-                val statisticsContainerId = "statisticsContainerId"
-                div {
-                    id = statisticsContainerId
-
-                    StatisticsComponent() {
-                        containerId = statisticsContainerId
-                    }
-                }
+                StatisticsComponent()
 
             }
 

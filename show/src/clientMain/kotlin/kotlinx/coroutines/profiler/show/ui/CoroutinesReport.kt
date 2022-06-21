@@ -7,20 +7,19 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
 import kotlinx.dom.removeClass
+import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.get
-import react.FC
-import react.Props
+import react.*
 import react.css.css
 import react.dom.html.ReactHTML.div
-import react.useEffectOnce
-import react.useState
 
 private val scope = MainScope()
 
 val CoroutinesReport = FC<CoroutinesReportProps> { props ->
     kotlinext.js.require("./shadows.css")
 
-    var selectedCoroutineId: Long? = null
+    var selectedCoroutineId: Long? by useState(null)
+    val removeSelectionRef = useRef<HTMLDivElement>(null)
 
     var coroutinesIds by useState(emptyList<Long>())
 
@@ -67,7 +66,7 @@ val CoroutinesReport = FC<CoroutinesReportProps> { props ->
 
                         props.onCoroutineSelected(it)
 
-                        document.getElementById("hoverShadowedText")!!.removeAttribute("hidden")
+                        removeSelectionRef.current!!.removeAttribute("hidden")
 
                     }
                 }
@@ -77,7 +76,7 @@ val CoroutinesReport = FC<CoroutinesReportProps> { props ->
 
 
         div {
-            id = "hoverShadowedText"
+            ref = removeSelectionRef
             hidden = true
 
             css {
@@ -88,7 +87,7 @@ val CoroutinesReport = FC<CoroutinesReportProps> { props ->
             onClick = {
                 selectedCoroutineId = null
 
-                document.getElementById("hoverShadowedText")!!.setAttribute("hidden", "true")
+                removeSelectionRef.current!!.setAttribute("hidden", "true")
                 document.getElementsByClassName("selectedCoroutineReportBox")[0]!!.removeClass("selectedCoroutineReportBox")
                 props.onSelectionCleared()
             }

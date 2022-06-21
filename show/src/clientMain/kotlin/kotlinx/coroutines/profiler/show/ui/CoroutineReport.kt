@@ -2,26 +2,23 @@ package kotlinx.coroutines.profiler.show.ui
 
 import api
 import csstype.*
-import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.profiler.core.data.ProfilingCoroutineInfo
 import kotlinx.dom.addClass
 import kotlinx.dom.hasClass
-import react.FC
-import react.Props
+import org.w3c.dom.HTMLDivElement
+import react.*
 import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.p
-import react.useEffectOnce
-import react.useState
 
 private val scope = MainScope()
 
 val CoroutineReport = FC<CoroutineReportProps> { props ->
     kotlinext.js.require("./shadows.css")
 
-    val thisElementId = "coroutineReport${props.coroutineId}"
+    val containerRef = useRef<HTMLDivElement>(null)
 
     var coroutineInfo by useState(ProfilingCoroutineInfo(-1, "", null, emptyList()))
 
@@ -34,13 +31,12 @@ val CoroutineReport = FC<CoroutineReportProps> { props ->
 
 
     div {
-        id = thisElementId
+        ref = containerRef
 
         onMouseEnter = {
-            if (!document.getElementById(thisElementId)!!.hasClass("shadowedCoroutineReportBox"))
-                document.getElementById(thisElementId)!!.addClass("shadowedCoroutineReportBox")
+            if (!containerRef.current!!.hasClass("shadowedCoroutineReportBox"))
+                containerRef.current!!.addClass("shadowedCoroutineReportBox")
         }
-
 
         css {
             borderRadius = 0.5.em
@@ -60,7 +56,7 @@ val CoroutineReport = FC<CoroutineReportProps> { props ->
 
         onClick = {
             props.onCoroutineSelected(coroutineInfo)
-            document.getElementById(thisElementId)!!.classList.add("selectedCoroutineReportBox")
+            containerRef.current!!.classList.add("selectedCoroutineReportBox")
         }
 
         tabIndex = 0
