@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
             coroutineReportRoute()
             coroutineRangesCountAtState()
             coroutineProbesCountAtState()
-            coroutineSuspensionsCountWithSameStacktracesLikeProbeFrame()
+            suspensionsCountAtSameStatesLikeProbeRangeId()
             suspensionPointsCoroutineStackTraceRoute()
             threadsRoute()
         }

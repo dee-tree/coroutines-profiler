@@ -57,19 +57,15 @@ val CoroutineInfo = FC<CoroutineInfoProps> { props ->
             }
 
             props.probeFrame?.let { probeFrame ->
-                if (probeFrame.coroutineState != State.SUSPENDED.toString())
+                if (probeFrame.coroutineState != State.SUSPENDED)
                     return@let
 
                 launch {
-                    val probe = api.getCoroutineReport(probeFrame.coroutineId).probes.find {
-                        it.coroutineId == probeFrame.coroutineId
-                                && it.state == State.SUSPENDED
-                                && it.lastUpdatedStackTrace == probeFrame.stacktrace
-                    } ?: error("required probe not found!")
+                    val rangeId = probeFrame.probesRangeId
                     suspensionsCountAtSelectedProbeFrame =
-                        api.getCoroutineSuspensionsCountWithSameStacktracesLikeProbeFrame(
+                        api.getSuspensionsCountAtRangeId(
                             probeFrame.coroutineId,
-                            probe.probeId
+                            rangeId
                         )
                 }
             }
@@ -94,9 +90,9 @@ val CoroutineInfo = FC<CoroutineInfoProps> { props ->
         props.probeFrame?.let { probeFrame ->
             +"Sampled at this frame ${probeFrame.probesCount} times"
             br()
-            if (probeFrame.coroutineState == "RUNNING") +"At threads ${probeFrame.threads}"
+            if (probeFrame.coroutineState == State.RUNNING) +"At threads ${probeFrame.threads}"
             br()
-            if (probeFrame.coroutineState == State.SUSPENDED.toString()) +"Suspended at selected frame ${suspensionsCountAtSelectedProbeFrame} times"
+            if (probeFrame.coroutineState == State.SUSPENDED) +"Suspended at selected frame ${suspensionsCountAtSelectedProbeFrame} times"
 
 
             hr()

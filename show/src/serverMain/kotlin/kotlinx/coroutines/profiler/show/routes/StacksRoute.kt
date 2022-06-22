@@ -15,9 +15,8 @@ import kotlinx.coroutines.profiler.show.toProbeFrame
 fun Route.stacksRoute() {
     get("/stacks") {
         ProfilingStorage.setProfilingResults(null)
-        ProfilingStorage.setCoroutinesProbes(null)
+        ProfilingStorage.setCoroutinesProbesRanges(null)
         ProfilingStorage.setLinearCoroutinesStructure(null)
-//        initializeCoroutinesIfNot()
         initializeCoroutinesIfNot()
         val structuredCoroutines = linearCoroutinesStructure.toStructured()
 

@@ -1,5 +1,6 @@
 package kotlinx.coroutines.profiler.show.serialization
 
+import kotlinx.coroutines.profiler.core.data.State
 import kotlinx.serialization.SerialName
 
 /*
@@ -18,10 +19,11 @@ data class CoroutineProbeFrame(
     @SerialName("id")
     val coroutineId: Long,
     @SerialName("state")
-    val coroutineState: String,
+    val coroutineState: State,
     val probesCount: Int,
     val stacktrace: List<String>,
     val threads: List<String> = emptyList(),
+    val probesRangeId: Int
 ) {
 
     fun walk(action: (CoroutineProbeFrame) -> Unit) {
@@ -48,9 +50,10 @@ class CoroutineProbeFrameBuilder @PublishedApi internal constructor() {
     private var childrenInitially: MutableList<CoroutineProbeFrame>? = null
 
     var coroutineId: Long = -1
-    var coroutineState: String = ""
+    lateinit var coroutineState: State
     var stacktrace: List<String> = listOf()
     var threads: List<String> = emptyList()
+    var probesRangeId: Int = -1
 
     fun addChild(builderAction: CoroutineProbeFrameBuilder.() -> CoroutineProbeFrame) {
         childrenInitially ?: run { childrenInitially = mutableListOf() }
@@ -71,6 +74,7 @@ class CoroutineProbeFrameBuilder @PublishedApi internal constructor() {
         coroutineState,
         probes,
         stacktrace,
-        threads
+        threads,
+        probesRangeId
     )
 }

@@ -39,10 +39,10 @@ class Api(private val client: HttpClient) {
         }
     }
 
-    suspend fun getCoroutineSuspensionsCountWithSameStacktracesLikeProbeFrame(coroutineId: Long, probeId: Int): Int {
-        return client.get<Int>("${endpoint}/coroutineSuspensionsCountWithStacktraceInProbe") {
+    suspend fun getSuspensionsCountAtRangeId(coroutineId: Long, probesRangeId: Int): Int {
+        return client.get<Int>("${endpoint}/coroutineSuspensionsCountAtRangeId") {
             parameter("id", coroutineId)
-            parameter("probeId", probeId)
+            parameter("probesRangeId", probesRangeId)
         }
     }
 

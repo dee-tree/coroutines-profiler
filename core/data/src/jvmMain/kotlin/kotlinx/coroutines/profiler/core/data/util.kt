@@ -26,8 +26,13 @@ val ProfilingResultFile.probesFile: File
 fun ProfilingResultFile.loadStructure(): LinearCoroutinesStructure =
     readCoroutinesStructureFromStream(GZIPInputStream(structureFile.inputStream()))
 
+@Deprecated("use ProfilingResultFile.loadProbesRanges()")
 fun ProfilingResultFile.loadProbes(): Probes =
     readProbesFromStream(GZIPInputStream(probesFile.inputStream()))
+
+
+fun ProfilingResultFile.loadProbesRanges(): List<CoroutineProbesRange> =
+    readProbesRangesFromStream(GZIPInputStream(probesFile.inputStream()))
 
 
 /**
@@ -38,7 +43,8 @@ internal fun readCoroutinesStructureFromStream(input: InputStream): LinearCorout
     LinearCoroutinesStructure(buildList {
         while (input.available() != 0) {
             val coroutineInfoSize = input.readNBytes(Int.SIZE_BYTES).toInt()
-            val coroutineInfo = ProtoBuf.decodeFromByteArray<ProfilingCoroutineInfo>(input.readNBytes(coroutineInfoSize))
+            val coroutineInfo =
+                ProtoBuf.decodeFromByteArray<ProfilingCoroutineInfo>(input.readNBytes(coroutineInfoSize))
             add(coroutineInfo)
         }
     })
@@ -46,6 +52,7 @@ internal fun readCoroutinesStructureFromStream(input: InputStream): LinearCorout
 /**
  * Remember that probes is stored in GZIP'ed protobuf format
  */
+@Deprecated("use #readProbesRangesFromStream")
 @ExperimentalSerializationApi
 internal fun readProbesFromStream(input: InputStream): Probes = Probes(buildList {
     while (input.available() != 0) {
@@ -55,6 +62,16 @@ internal fun readProbesFromStream(input: InputStream): Probes = Probes(buildList
     }
 })
 
+
+@ExperimentalSerializationApi
+internal fun readProbesRangesFromStream(input: InputStream): List<CoroutineProbesRange> = buildList {
+    while (input.available() != 0) {
+        val rangeSize = input.readNBytes(Int.SIZE_BYTES).toInt()
+        val probesRange = ProtoBuf.decodeFromByteArray<CoroutineProbesRange>(input.readNBytes(rangeSize))
+        add(probesRange)
+    }
+}
+
 fun ProfilingCoroutineInfo.encodeToByteArray(): ByteArray {
 
     val encodedInfo = ProtoBuf.encodeToByteArray(this)
@@ -63,6 +80,14 @@ fun ProfilingCoroutineInfo.encodeToByteArray(): ByteArray {
     return encodedSize + encodedInfo
 }
 
+fun CoroutineProbesRange.encodeToByteArray(): ByteArray {
+    val encodedInfo = ProtoBuf.encodeToByteArray(this)
+    val encodedSize = encodedInfo.size.toByteArray()
+
+    return encodedSize + encodedInfo
+}
+
+@Deprecated("use CoroutineProbesRange.encodeToByteArray()")
 fun CoroutinesDump.encodeToByteArray(): ByteArray {
 
     val bytes = mutableListOf<ByteArray>()

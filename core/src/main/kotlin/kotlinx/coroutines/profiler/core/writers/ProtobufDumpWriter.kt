@@ -52,17 +52,26 @@ internal class ProtobufDumpWriter(
         }
     }
 
+
+    private val openedRanges = OpenedRanges(coroutinesProbesFile)
+
     override fun writeDump(dump: CoroutinesDump) {
         probesCount += dump.dump.size
 
         executor.execute {
-            coroutinesProbesFile.appendBytes(dump.encodeToByteArray())
+            dump.dump.forEach {
+                openedRanges.push(it)
+            }
         }
     }
 
     override fun stop() {
         println("Profiler is stopping...")
         println("Write dumps at ${folder.absolutePath}")
+
+        executor.execute {
+            openedRanges.completeAllRanges()
+        }
 
         executor.execute {
             compression?.let {
@@ -100,3 +109,63 @@ internal class ProtobufDumpWriter(
     }
 
 }
+
+private class OpenedRanges(
+    private val probesFile: File
+) {
+    /**
+     * first probe for this state *to* last probeId
+     */
+    private val openedRanges: MutableMap<CoroutineProbe, Int> = mutableMapOf()
+
+    fun push(probe: CoroutineProbe) {
+        openedRanges.keys.find { probe.coroutineId == it.coroutineId }?.let { sameCoroIdProbe ->
+            if (sameCoroIdProbe.equalsExcludingProbeId(probe))
+                openedRanges[sameCoroIdProbe] = probe.probeId
+            else {
+                probesFile.appendBytes(
+                    (sameCoroIdProbe to openedRanges[sameCoroIdProbe]!!).toProbesRange().encodeToByteArray()
+                )
+                openedRanges.remove(sameCoroIdProbe)
+            }
+        } ?: run {
+            // if coroutine not found in ranges => create the range
+            openedRanges[probe] = probe.probeId
+        }
+    }
+
+    fun completeAllRanges() {
+        openedRanges.forEach { (probe, lastProbeId) ->
+            probesFile.appendBytes((probe to lastProbeId).toProbesRange().encodeToByteArray())
+        }
+        openedRanges.clear()
+    }
+}
+
+private fun Pair<CoroutineProbe, Int>.toProbesRange(): CoroutineProbesRange = when (first.state) {
+    State.CREATED -> CreatedCoroutineProbesRange(
+        first.coroutineId,
+        first.probeId,
+        second
+    )
+    State.RUNNING -> RunningCoroutineProbesRange(
+        first.coroutineId,
+        first.lastUpdatedStackTrace,
+        first.lastUpdatedThreadName ?: error("Thread is null on running coroutine #${first.coroutineId}"),
+        first.probeId,
+        second
+    )
+    State.SUSPENDED -> SuspendedCoroutineProbesRange(
+        first.coroutineId,
+        first.lastUpdatedStackTrace,
+        first.probeId,
+        second
+    )
+}
+
+
+private fun CoroutineProbe.equalsExcludingProbeId(other: CoroutineProbe): Boolean =
+    this.coroutineId == other.coroutineId
+            && this.state == other.state
+            && this.lastUpdatedStackTrace == other.lastUpdatedStackTrace
+            && this.lastUpdatedThreadName == other.lastUpdatedThreadName

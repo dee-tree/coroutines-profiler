@@ -5,7 +5,6 @@ import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.profiler.core.data.State
-import kotlinx.coroutines.profiler.show.CoroutineStateRange.Companion.splitByStates
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage
 import kotlinx.coroutines.profiler.show.storage.ProfilingStorage.initializeCoroutinesIfNot
 
@@ -44,30 +43,29 @@ fun Route.coroutineRangesCountAtState() {
         val rangesCount = ProfilingStorage.linearCoroutinesStructure
             .coroutines
             .find { it.id == id }
-            ?.probes?.splitByStates(true, true)
+            ?.probes//.splitByStates(true, true)
             ?.count { it.state == state } ?: 0
 
         call.respond(rangesCount)
     }
 }
 
-fun Route.coroutineSuspensionsCountWithSameStacktracesLikeProbeFrame() {
-    get("/coroutineSuspensionsCountWithStacktraceInProbe{id}{probeId}") {
-        val id =
-            call.parameters["id"]?.toLong() ?: call.respond(HttpStatusCode.BadRequest, "Coroutine id must be long!")
-        val probeId = call.parameters["probeId"]?.toInt() ?: call.respond(
-            HttpStatusCode.BadRequest,
-            "Coroutine id must be integer!"
-        )
+fun Route.suspensionsCountAtSameStatesLikeProbeRangeId() {
+    get("/coroutineSuspensionsCountAtRangeId{id}{probesRangeId}") {
+        val id = call.parameters["id"]?.toLong()
+            ?: call.respond(HttpStatusCode.BadRequest, "Coroutine id must be long!")
+        val probesRangeId = call.parameters["probesRangeId"]?.toInt()
+            ?: call.respond(HttpStatusCode.BadRequest, "probeIdRange must be integer!")
 
         initializeCoroutinesIfNot()
 
-        val exampleProbe = ProfilingStorage.coroutinesProbes.probes.find { it.probeId == probeId }!!
+        val exampleProbe = ProfilingStorage.coroutinesProbesRanges.find { it.rangeId == probesRangeId }!!
         val rangesCount = ProfilingStorage.linearCoroutinesStructure
             .coroutines
             .find { it.id == id }
-            ?.probes?.splitByStates(true, true)
-            ?.count { it.state == State.SUSPENDED && it.lastStackTrace == exampleProbe.lastUpdatedStackTrace } ?: 0
+            ?.probes
+            ?.count { it.state == State.SUSPENDED && it.lastSuspensionPointStackTrace == exampleProbe.lastSuspensionPointStackTrace }
+            ?: 0
 
         call.respond(rangesCount)
     }
@@ -88,7 +86,7 @@ fun Route.coroutineProbesCountAtState() {
         val probesCount = ProfilingStorage.linearCoroutinesStructure
             .coroutines
             .find { it.id == id }
-            ?.probes?.splitByStates(true, true)
+            ?.probes
             ?.filter { it.state == state }
             ?.sumOf { it.probesRange.last - it.probesRange.first + 1 } ?: 0
 

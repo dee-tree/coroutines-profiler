@@ -25,14 +25,15 @@ object ProfilingStorage {
 
 
     // Coroutine probes
-    fun isCoroutinesProbesInitialized(): Boolean = _coroutinesProbes != null
-    fun setCoroutinesProbes(probes: Probes?) {
-        _coroutinesProbes = probes
+    fun isCoroutinesProbesRangesInitialized(): Boolean = _coroutinesProbesRanges != null
+
+    fun setCoroutinesProbesRanges(probes: List<CoroutineProbesRange>?) {
+        _coroutinesProbesRanges = probes
     }
 
-    private var _coroutinesProbes: Probes? = null
-    val coroutinesProbes: Probes
-        get() = _coroutinesProbes!!
+    private var _coroutinesProbesRanges: List<CoroutineProbesRange>? = null
+    val coroutinesProbesRanges: List<CoroutineProbesRange>
+        get() = _coroutinesProbesRanges!!
 
 
     // Profiling results
@@ -69,22 +70,22 @@ object ProfilingStorage {
 
     suspend fun PipelineContext<Unit, ApplicationCall>.initializeCoroutinesIfNot() {
         if (_linearCoroutinesStructure != null) return
-        if (_coroutinesProbes != null) return
+        if (_coroutinesProbesRanges != null) return
 
         initializeProfilingResultsIfNot()
 
-        setCoroutinesProbes(profilingResults.loadProbes())
+        setCoroutinesProbesRanges(profilingResults.loadProbesRanges())
         setLinearCoroutinesStructure(
-            profilingResults.loadStructure().addProbes(coroutinesProbes.probes)
+            profilingResults.loadStructure().addProbes(coroutinesProbesRanges)
         )
     }
 
     suspend fun PipelineContext<Unit, ApplicationCall>.initializeCoroutines() {
         initializeProfilingResults()
 
-        setCoroutinesProbes(profilingResults.loadProbes())
+        setCoroutinesProbesRanges(profilingResults.loadProbesRanges())
         setLinearCoroutinesStructure(
-            profilingResults.loadStructure().addProbes(coroutinesProbes.probes)
+            profilingResults.loadStructure().addProbes(coroutinesProbesRanges)
         )
     }
 }

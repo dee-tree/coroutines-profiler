@@ -79,7 +79,7 @@ data class CoroutineSuspensionsFrame(
         info.probes.filter { it.state == State.SUSPENDED }.forEach { suspendProbe ->
             this.updateFrames(
                 suspendProbe.coroutineId,
-                info.creationStackTrace.reversed() + "CREATION STACKTRACE" + suspendProbe.lastUpdatedStackTrace.reversed()
+                info.creationStackTrace.reversed() + "CREATION STACKTRACE" + suspendProbe.lastSuspensionPointStackTrace.reversed()
             )
         }
     }

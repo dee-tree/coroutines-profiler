@@ -16,6 +16,9 @@ const val ALPHA_SUSPENDED_COLOR = "#9915FF90"
 fun coroutineStateColorMapper(d: Any, originalColor: String): String {
     val d = d.asJsObject().valueOf()
 
+    if (d.data.name == "root")
+        return originalColor
+
     return when (d.highlight) {
         true -> when (d.data.state) {
             "CREATED" -> CREATED_COLOR
@@ -43,9 +46,9 @@ fun coroutineFrameLabel(d: Any): String {
 
     return "name: " + d.data.name + "\n" +
             "value: " + d.value + "\n" +
-            "probes: " + d.data.probesCount + "\n" +
-            "state: " + d.data.state + "\n" +
-            if (d.data.state == "RUNNING") "thread: ${d.data.thread}\n" else ""
+            if (d.data.name != "root") ("probes: " + d.data.probesCount + "\n") else "" +
+                    if (d.data.name != "root") ("state: " + d.data.state + "\n") else "" +
+                            if (d.data.state == "RUNNING") "thread: ${d.data.thread}\n" else ""
 }
 
 fun coroutineIdSearchMatch(d: Any, id: Long): Boolean {

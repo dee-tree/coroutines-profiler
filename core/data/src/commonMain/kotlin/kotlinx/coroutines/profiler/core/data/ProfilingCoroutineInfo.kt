@@ -1,6 +1,7 @@
 package kotlinx.coroutines.profiler.core.data
 
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Transient
 
 
 @kotlinx.serialization.Serializable
@@ -14,15 +15,15 @@ open class ProfilingCoroutineInfo(
     @SerialName("creationStackTrace")
     open val creationStackTrace: List<String>,
 
-    @kotlinx.serialization.Serializable
-    protected val _probes: MutableList<CoroutineProbe> = mutableListOf()
+    @Transient
+    protected val _probes: MutableList<CoroutineProbesRange> = mutableListOf()
 ) {
 
-    val probes: List<CoroutineProbe>
+    val probes: List<CoroutineProbesRange>
         get() = _probes
 
 
-    fun setProbes(probes: List<CoroutineProbe>): ProfilingCoroutineInfo =
+    fun setProbes(probes: List<CoroutineProbesRange>): ProfilingCoroutineInfo =
         this.apply {
             _probes.clear()
             _probes.addAll(probes)
@@ -42,7 +43,7 @@ open class ProfilingCoroutineInfo(
 
     companion object {
         fun LinearCoroutinesStructure.addProbes(
-            probes: List<CoroutineProbe>
+            probes: List<CoroutineProbesRange>
         ): LinearCoroutinesStructure {
             probes.forEach { probe ->
                 this.coroutines.find {
@@ -61,7 +62,7 @@ open class StructuredProfilingCoroutineInfo(
     parentId: Long?,
     creationStackTrace: List<String>,
     _children: List<StructuredProfilingCoroutineInfo>,
-    _probes: List<CoroutineProbe> = emptyList()
+    _probes: List<CoroutineProbesRange> = emptyList()
 ) : ProfilingCoroutineInfo(id, name, parentId, creationStackTrace, _probes.toMutableList()) {
 
     private val _children: MutableList<StructuredProfilingCoroutineInfo> = _children.toMutableList()
@@ -89,7 +90,7 @@ open class StructuredProfilingCoroutineInfo(
     }
 
     fun addProbes(
-        probes: List<CoroutineProbe>
+        probes: List<CoroutineProbesRange>
     ): StructuredProfilingCoroutineInfo {
         probes.forEach { probe ->
             this.find {
@@ -120,7 +121,7 @@ open class StructuredProfilingCoroutineInfo(
         }
 
         fun CoroutinesStructure.addProbes(
-            probes: List<CoroutineProbe>
+            probes: List<CoroutineProbesRange>
         ): CoroutinesStructure {
             probes.forEach { probe ->
                 this.find {

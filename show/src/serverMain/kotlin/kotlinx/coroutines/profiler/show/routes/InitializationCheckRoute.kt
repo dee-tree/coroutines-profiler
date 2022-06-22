@@ -21,7 +21,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.checkProfilingResultsFileExis
 
 suspend fun PipelineContext<Unit, ApplicationCall>.checkCoroutinesProbesInitialized() {
     checkProfilingResultsFileExists()
-    if (!ProfilingStorage.isCoroutinesProbesInitialized()) {
+    if (!ProfilingStorage.isCoroutinesProbesRangesInitialized()) {
         call.respond(HttpStatusCode.BadRequest, "Profiling probes are not initialized!")
     }
 }
