@@ -1,10 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.util.*
 
 plugins {
     kotlin("jvm") version "1.6.10"
     application
-    id("me.champeau.jmh") version "0.6.6"
 }
 
 group = "kotlinx.coroutines.profiler"
@@ -13,19 +11,10 @@ version = "1.0-SNAPSHOT"
 val ktorVersion = "1.6.7"
 
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0-SNAPSHOT")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0")
 
-    jmh("commons-io:commons-io:2.11.0")
-    jmh("org.openjdk.jmh:jmh-core:1.35")
-    jmh("org.openjdk.jmh:jmh-generator-annprocess:1.35")
-
-    jmh(project(":core"))
-    jmh("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
 
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -34,11 +23,16 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
+val COROUTINES_DEBUG_AGENT_PATH: String by rootProject.extra
+//val props = Properties()
+//file("settings.properties").inputStream().let { props.load(it) }
+
 tasks.test {
     useJUnitPlatform()
 
     jvmArgs(
-        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
+        "-javaagent:$COROUTINES_DEBUG_AGENT_PATH",
+//        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
         "-javaagent:${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar",
     )
 }
@@ -53,8 +47,6 @@ application {
     mainClass.set(mainClassQualifiedName)
 }
 
-val props = Properties()
-file("settings.properties").inputStream().let { props.load(it) }
 
 
 tasks.create<JavaExec>("runWithProfiler") {
@@ -67,7 +59,8 @@ tasks.create<JavaExec>("runWithProfiler") {
         "${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}profiler.jar"
 
     jvmArgs(
-        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
+//        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
+        "-javaagent:$COROUTINES_DEBUG_AGENT_PATH}",
         "-javaagent:$agentPath=$args"
     )
 }
@@ -89,23 +82,3 @@ tasks.jar {
 }
 
 tasks["test"].dependsOn(":core:fatJar")
-
-
-val jarName = "bst-removal-bench.jar"
-
-tasks.named("jmhJar", type = Jar::class) {
-    archiveFileName.set(jarName)
-}
-
-task("jmhRun", type = me.champeau.jmh.JMHTask::class) {
-    jarArchive.set(File(File(project.buildDir.absoluteFile, "libs"), jarName))
-    resultsFile.set(File(File(project.buildDir.absoluteFile, "results/jmh"), "results.json"))
-//    resultFormat.set("json")
-
-    jvmArgs.set(listOf("-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}"))
-
-    failOnError.set(true)
-
-    dependsOn("jmhJar")
-
-}

@@ -13,6 +13,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/benchmarks" />
+            <option value="$PROJECT_DIR$/benchmarks/benchmark-original-lib" />
+            <option value="$PROJECT_DIR$/benchmarks/benchmark-patched-lib" />
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/core/data" />
             <option value="$PROJECT_DIR$/sample-app" />
