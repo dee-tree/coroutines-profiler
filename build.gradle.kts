@@ -1,25 +1,26 @@
-import java.util.*
+plugins {
+    kotlin("jvm") version "1.6.10" apply false
+    kotlin("plugin.serialization") version "1.6.10" apply false
+}
 
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
 allprojects {
     repositories {
-        flatDir {
-            dirs(File(rootDir, "libs").absolutePath)
-        }
+        mavenLocal()
         mavenCentral()
     }
 }
 
-val props: Properties by extra {
-    Properties().apply {
-        load(
-            File(rootDir, "settings.properties").inputStream()
-        )
-    }
+val serializationVersion: String by extra {
+    "1.3.2"
 }
 
-val COROUTINES_DEBUG_AGENT_PATH: String by extra {
-    props["COROUTINES_DEBUG_AGENT_PATH"].toString()
+val coroutinesVersion: String by extra {
+    "1.6.0"
+}
+
+val patchedCoroutinesVersion: String by extra {
+    "1.6.0-SNAPSHOT"
 }

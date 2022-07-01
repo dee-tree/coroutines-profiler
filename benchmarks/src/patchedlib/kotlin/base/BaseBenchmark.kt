@@ -6,11 +6,8 @@ import kotlinx.coroutines.debug.DebugProbes
 
 abstract class BaseBenchmark : Base() {
 
-    @Param("NO_PROBES", "DEFAULT", "CREATION_ST", "SANITIZE_ST", "DELAYED_CREATION_ST", "C_S", "C_D", "S_D", "C_S_D")
+    @Param("NO_PROBES", "DEFAULT", "CREATION_ST", "SANITIZE_ST", "LAZY_CREATION_ST", "C_S", "C_L", "S_L", "C_S_L")
     override lateinit var mode: Modes
-
-    var delayedCreationStackTraces: Boolean = false
-        private set
 
     override fun setup() {
         super.setup()
@@ -21,7 +18,7 @@ abstract class BaseBenchmark : Base() {
 
         DebugProbes.enableCreationStackTraces = mode.creationStackTrace
         DebugProbes.sanitizeStackTraces = mode.sanitizeStackTraces
-        DebugProbes.delayedCreationStackTraces = mode.delayedCreationStackTraces
+        DebugProbes.lazyCreationStackTraces = mode.lazyCreationStackTraces
     }
 
     override fun tearDown() {

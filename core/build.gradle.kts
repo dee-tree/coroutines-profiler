@@ -1,23 +1,22 @@
 plugins {
-    kotlin("jvm") version "1.6.10"
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
 }
 
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
+val serializationVersion: String by rootProject.extra
+val patchedCoroutinesVersion: String by rootProject.extra
 
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0-SNAPSHOT")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${serializationVersion}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${patchedCoroutinesVersion}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:${patchedCoroutinesVersion}")
 
-    implementation(project(":core:data"))
+    api(project(":core:data"))
 
     // cli arguments parser
     implementation("com.xenomachina:kotlin-argparser:2.0.7")

@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm")
     application
 }
 
@@ -10,10 +10,34 @@ version = "1.0-SNAPSHOT"
 
 val ktorVersion = "1.6.7"
 
+val coroutinesVersion: String by rootProject.extra
+val patchedCoroutinesVersion: String by rootProject.extra
+
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0-SNAPSHOT")
-//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core") {
+        because("patched version of lib with lazy creation stack traces")
+        version {
+            strictly("1.6.0-SNAPSHOT")
+        }
+    }
+
+    constraints {
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${patchedCoroutinesVersion}")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${coroutinesVersion}") {
+            because("patch influenced only -core and -debug packages")
+        }
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm") {
+            because("patched -core package must be SNAPSHOT version")
+            version {
+                strictly(patchedCoroutinesVersion)
+            }
+        }
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-bom:${coroutinesVersion}") {
+            because("patch influenced only -core and -debug packages")
+        }
+
+    }
 
 
     implementation("io.ktor:ktor-serialization:$ktorVersion")
@@ -23,16 +47,10 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-val COROUTINES_DEBUG_AGENT_PATH: String by rootProject.extra
-//val props = Properties()
-//file("settings.properties").inputStream().let { props.load(it) }
-
 tasks.test {
     useJUnitPlatform()
 
     jvmArgs(
-        "-javaagent:$COROUTINES_DEBUG_AGENT_PATH",
-//        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
         "-javaagent:${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}sampling.jar",
     )
 }
@@ -47,8 +65,6 @@ application {
     mainClass.set(mainClassQualifiedName)
 }
 
-
-
 tasks.create<JavaExec>("runWithProfiler") {
     dependsOn(":core:fatJar")
     classpath(sourceSets["main"].runtimeClasspath)
@@ -59,8 +75,6 @@ tasks.create<JavaExec>("runWithProfiler") {
         "${rootProject.childProjects["core"]!!.projectDir}${File.separator}out${File.separator}artifacts${File.separator}profiler${File.separator}profiler.jar"
 
     jvmArgs(
-//        "-javaagent:${props["COROUTINES_DEBUG_AGENT_PATH"]}",
-        "-javaagent:$COROUTINES_DEBUG_AGENT_PATH}",
         "-javaagent:$agentPath=$args"
     )
 }

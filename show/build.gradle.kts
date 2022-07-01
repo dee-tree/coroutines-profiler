@@ -1,10 +1,12 @@
 plugins {
-    kotlin("multiplatform") version "1.6.10"
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("multiplatform")
+    kotlin("plugin.serialization")
     application
 }
 
-val serializationVersion = "1.3.2"
+val serializationVersion: String by rootProject.extra
+val coroutinesVersion: String by rootProject.extra
+
 val ktorVersion = "1.6.7"
 val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
 val letsPlotKotlinVersion = "3.2.0"
@@ -12,15 +14,12 @@ val letsPlotKotlinVersion = "3.2.0"
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
-
 val serverMainClassName = "kotlinx.coroutines.profiler.show.MainKt"
 application {
 
     mainClass.set(serverMainClassName)
 }
+
 
 kotlin {
 
@@ -101,7 +100,7 @@ kotlin {
                 implementation(npm("react", "17.0.2"))
                 implementation(npm("react-dom", "17.0.2"))
 
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${coroutinesVersion}")
 
                 implementation("org.jetbrains.lets-plot:lets-plot-kotlin-js:$letsPlotKotlinVersion")
 
@@ -132,16 +131,6 @@ tasks.named<Jar>("jar") {
 
 }
 
-//distributions {
-//    main {
-//        contents {
-//            from("$buildDir/libs") {
-//                rename("${rootProject.name}-server", rootProject.name)
-//                into("lib")
-//            }
-//        }
-//    }
-//}
 
 tasks.named<JavaExec>("run") {
     jvmArgs(

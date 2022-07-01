@@ -2,7 +2,10 @@ package base
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.DebugProbes
-import org.openjdk.jmh.annotations.*
+import org.openjdk.jmh.annotations.Level
+import org.openjdk.jmh.annotations.Param
+import org.openjdk.jmh.annotations.Setup
+import org.openjdk.jmh.annotations.TearDown
 import org.openjdk.jmh.infra.Blackhole
 
 abstract class BenchmarkOnDumpCoroutines : BaseBenchmark() {
@@ -51,6 +54,18 @@ open class BenchmarkLotOfDelaysOnDumpCoroutines : BenchmarkOnDumpCoroutines() {
     override fun runJob(): Job = GlobalScope.launch {
         repeat(10_000) {
             delay(10)
+        }
+    }
+}
+
+open class BenchmarkLotOfCoroutinesOnDumpCoroutines : BenchmarkOnDumpCoroutines() {
+    override fun runJob(): Job = GlobalScope.launch {
+        repeat(1000) {
+            launch {
+                delay(10)
+                delay(10)
+                delay(Long.MAX_VALUE)
+            }
         }
     }
 }

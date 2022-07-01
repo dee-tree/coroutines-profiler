@@ -1,14 +1,12 @@
 plugins {
-    kotlin("multiplatform")// version "1.6.10"
+    kotlin("multiplatform")
     kotlin("plugin.serialization")
 }
 
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
+val serializationVersion: String by rootProject.extra
 
 kotlin {
 
@@ -21,7 +19,6 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
             }
         }
         val commonTest by getting {
@@ -33,7 +30,7 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.3.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:${serializationVersion}")
             }
         }
     }

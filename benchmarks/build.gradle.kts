@@ -1,34 +1,32 @@
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm")
     application
     id("me.champeau.jmh") version "0.6.6"
 }
 
-val COROUTINES_DEBUG_AGENT_PATH: String by rootProject.extra
-
 val originalLibProfile = "originallib"
 val patchedLibProfile = "patchedlib"
-var profile: String? = null
-
-if (project.hasProperty(originalLibProfile)) {
-    profile = originalLibProfile
-
-} else if (project.hasProperty(patchedLibProfile)) {
-    profile = patchedLibProfile
+var profile: String = if (project.hasProperty(patchedLibProfile)) {
+    patchedLibProfile
+} else {
+    originalLibProfile
 }
 
-profile?.let {
-    sourceSets["jmh"].java.srcDirs("src/${it}/kotlin")
+
+sourceSets.create(profile)
+
+sourceSets["main"].java {
+    srcDir("src/${profile}/kotlin")
 }
 
-configurations.asMap.also { println("configs: $it") }
-sourceSets["jmh"].allSource.also { srcs -> println("sources of jmh: ${srcs.srcDirs}") }
-sourceSets["jmh"].allSource.also { srcs -> println("sources of jmh: ${srcs.elements.get()}") }
 
-println(profile?.let { "current profile: $it" } ?: "run without profile")
+println("current profile: $profile")
 
 group = "kotlinx.coroutines.profiler"
 version = "1.0-SNAPSHOT"
+
+val coroutinesVersion: String by rootProject.extra
+val patchedCoroutinesVersion: String by rootProject.extra
 
 
 dependencies {
@@ -43,16 +41,17 @@ dependencies {
 
     when (profile) {
         originalLibProfile -> {
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:${coroutinesVersion}")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:${coroutinesVersion}")
         }
         patchedLibProfile -> {
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0-SNAPSHOT")
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0-SNAPSHOT")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:${patchedCoroutinesVersion}")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:${patchedCoroutinesVersion}")
         }
+
         else -> {
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:${coroutinesVersion}")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:${coroutinesVersion}")
         }
     }
 
@@ -68,11 +67,9 @@ tasks.named("jmhJar", type = Jar::class) {
 }
 
 task("jmhRun", type = me.champeau.jmh.JMHTask::class) {
-    println("profile in jmhRun: ${profile}")
+    println("jmhRun execution with profile ${profile}")
     jarArchive.set(File(File(project.buildDir.absoluteFile, "libs"), jarName))
     resultsFile.set(File(File(project.buildDir.absoluteFile, "results/jmh"), "${profile}-results.txt"))
-
-    jvmArgs.set(listOf("-javaagent:${COROUTINES_DEBUG_AGENT_PATH}"))
 
     failOnError.set(true)
 

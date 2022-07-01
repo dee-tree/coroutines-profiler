@@ -36,22 +36,22 @@ abstract class Base {
  * DEFAULT - mode with enabled only DebugProbes
  * CREATION_ST (C) - mode with enabled DebugProbes and enabled creation stack traces
  * SANITIZE_ST (S) - mode with enabled DebugProbes and enabled sanitizing stack traces
- * DELAYED_CREATION_ST (D) - mode with enabled DebugProbes and enabled delayed (laze) creation stack traces. **Only for patched lib!**
+ * LAZY_CREATION_ST (L) - mode with enabled DebugProbes and enabled lazy creation stack traces. **Only for patched lib!**
  * C_S = CREATION_ST + SANITIZE_ST
- * C_D = CREATION_ST + DELAYED_CREATION_ST
- * S_D = SANITIZE_ST + DELAYED_CREATION_ST
- * C_S_D = CREATION_ST + SANITIZE_ST + DELAYED_CREATION_ST
+ * C_L = CREATION_ST + LAZY_CREATION_ST
+ * S_L = SANITIZE_ST + LAZY_CREATION_ST
+ * C_S_L = CREATION_ST + SANITIZE_ST + LAZY_CREATION_ST
  */
 enum class Modes(val value: Int) {
     NO_PROBES(0),
     DEFAULT(1),
     SANITIZE_ST(2 or DEFAULT.value),
     CREATION_ST(4 or DEFAULT.value),
-    DELAYED_CREATION_ST(8 or DEFAULT.value),
+    LAZY_CREATION_ST(8 or DEFAULT.value),
     C_S(CREATION_ST.value or SANITIZE_ST.value),
-    C_D(CREATION_ST.value or DELAYED_CREATION_ST.value),
-    S_D(SANITIZE_ST.value or DELAYED_CREATION_ST.value),
-    C_S_D(CREATION_ST.value or SANITIZE_ST.value or DELAYED_CREATION_ST.value);
+    C_L(CREATION_ST.value or LAZY_CREATION_ST.value),
+    S_L(SANITIZE_ST.value or LAZY_CREATION_ST.value),
+    C_S_L(CREATION_ST.value or SANITIZE_ST.value or LAZY_CREATION_ST.value);
 
     val installedProbes: Boolean
         get() = value.isSet(0)
@@ -62,7 +62,7 @@ enum class Modes(val value: Int) {
     val creationStackTrace: Boolean
         get() = value.isSet(2)
 
-    val delayedCreationStackTraces: Boolean
+    val lazyCreationStackTraces: Boolean
         get() = value.isSet(3)
 }
 

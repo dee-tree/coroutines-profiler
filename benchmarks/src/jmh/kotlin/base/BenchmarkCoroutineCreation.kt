@@ -1,7 +1,8 @@
 package base
 
-import kotlinx.coroutines.*
-import org.openjdk.jmh.annotations.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.openjdk.jmh.infra.Blackhole
 
 open class BenchmarkRunBlocking : BaseBenchmark() {

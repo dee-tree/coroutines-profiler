@@ -21,7 +21,7 @@ class CoroutinesProfiler(
 ) {
 
     companion object {
-        public var DELAYED_CREATION_STACK_TRACES = true
+        public var LAZY_CREATION_STACK_TRACES = true
     }
 
     @ExperimentalTime
@@ -54,12 +54,13 @@ class CoroutinesProfiler(
         })
 
         DebugProbes.install()
-        DebugProbes.delayedCreationStackTraces = DELAYED_CREATION_STACK_TRACES
+        DebugProbes.lazyCreationStackTraces = LAZY_CREATION_STACK_TRACES
         DebugProbes.sanitizeStackTraces = true
 
         thread(isDaemon = true) {
             println("creation stack traces: ${DebugProbes.enableCreationStackTraces}")
-            println("delayed creation stack traces: ${DebugProbes.delayedCreationStackTraces}")
+            println("sanitize stack traces: ${DebugProbes.sanitizeStackTraces}")
+            println("lazy creation stack traces: ${DebugProbes.lazyCreationStackTraces}")
 
             while (running) {
                 val dump: CoroutinesDump
