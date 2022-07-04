@@ -17,7 +17,7 @@ Profiler depends on modified
 
 To achieve patched version of coroutines packages jars:
 
-1. go to `profiler` branch: `git branch profiler`
+1. go to `profiler` branch: `git checkout profiler`
 2. build and push `core` module to *mavenLocal* repo: <br />`gradle :kotlinx-coroutines-core:publishToMavenLocal`
 3. build and push `debug` module to *mavenLocal* repo: <br />`gradle :kotlinx-coroutines-debug:publishToMavenLocal`
 
