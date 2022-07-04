@@ -4,13 +4,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.profiler.core.data.*
 import kotlinx.coroutines.profiler.core.data.statistics.InternalProfilingStatistics
 import kotlinx.coroutines.profiler.core.data.statistics.ProfilingStatistics
-import kotlinx.serialization.ExperimentalSerializationApi
 import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPOutputStream
 
-@ExperimentalSerializationApi
 @ExperimentalCoroutinesApi
 internal class ProtobufDumpWriter(
     private val folder: File,

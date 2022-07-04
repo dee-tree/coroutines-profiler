@@ -10,9 +10,6 @@ val serializationVersion: String by rootProject.extra
 val patchedCoroutinesVersion: String by rootProject.extra
 
 dependencies {
-    implementation(kotlin("stdlib"))
-
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${serializationVersion}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${patchedCoroutinesVersion}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:${patchedCoroutinesVersion}")
 

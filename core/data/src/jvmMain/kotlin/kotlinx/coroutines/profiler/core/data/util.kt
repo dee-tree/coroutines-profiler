@@ -72,6 +72,7 @@ internal fun readProbesRangesFromStream(input: InputStream): List<CoroutineProbe
     }
 }
 
+@ExperimentalSerializationApi
 fun ProfilingCoroutineInfo.encodeToByteArray(): ByteArray {
 
     val encodedInfo = ProtoBuf.encodeToByteArray(this)
@@ -80,6 +81,7 @@ fun ProfilingCoroutineInfo.encodeToByteArray(): ByteArray {
     return encodedSize + encodedInfo
 }
 
+@ExperimentalSerializationApi
 fun CoroutineProbesRange.encodeToByteArray(): ByteArray {
     val encodedInfo = ProtoBuf.encodeToByteArray(this)
     val encodedSize = encodedInfo.size.toByteArray()
